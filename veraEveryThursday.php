@@ -1,7 +1,7 @@
 <?
-require __DIR__ . '/functions-api.php';
+require __DIR__ . '/inc/functions-api.php';
 
-/* CRON выполняет скрипт каждый день в 7 утра */
+/* cron выполняет скрипт по средам в 10 утра */
 
 $order = [
 	'externalId' => 'php_' . time(),

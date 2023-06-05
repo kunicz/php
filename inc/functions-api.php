@@ -1,25 +1,22 @@
 <?
+require dirname(__DIR__) . '/vendor/autoload.php';
 
-require __DIR__ . '/vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->load();
 
 function apiUrl($method, $args)
 {
-	$url = $_SERVER['API_SITE'] . '/' . $method . '?' . setApiUrlArgs($args) . '&apiKey=' . $_SERVER['API_TOKEN'];
-	return $url;
+	return $_SERVER['API_SITE'] . '/' . $method . '?' . apiUrlArgs($args);
 }
-function setApiUrlArgs($args)
+function apiUrlArgs($args)
 {
-	$query = [];
+	$query = ['apiKey=' . $_SERVER['API_TOKEN']];
 	foreach ($args as $key => $value) {
 		$query[] = $key . '=' . $value;
 	}
 	return implode('&', $query);
 }
-
-function apiGET($method, $args)
+function apiGET($method, $args = [])
 {
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -30,18 +27,17 @@ function apiGET($method, $args)
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 	$server_output = curl_exec($ch);
 	curl_close($ch);
-	return $server_output;
+	return json_decode($server_output);
 }
-
-function apiPOST($method, $args)
+function apiPOST($method, $args = [])
 {
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_URL, apiUrl($method, $args));
 	curl_setopt($ch, CURLOPT_POST, 1);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, setApiUrlArgs($args));
+	curl_setopt($ch, CURLOPT_POSTFIELDS, apiUrlArgs($args));
 	$server_output = curl_exec($ch);
 	curl_close($ch);
-	return $server_output;
+	return json_decode($server_output);
 }
