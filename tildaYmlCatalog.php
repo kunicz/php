@@ -3,30 +3,14 @@ require __DIR__ . '/inc/headers-cors.php';
 require __DIR__ . '/inc/functions.php';
 require __DIR__ . '/inc/functions-apiRetailCrm.php';
 
-/*echo apiGET('orders/tilda_1649667412', ['site' => $_SERVER['magazin_2steblya_id']]);
-die();*/
+/**
+ * синхронизируем каталог товаров Тильды и RetailCrm через yml
+ * cron: каждые 5 минут
+ */
 
 use LireinCore\YMLParser\YML;
 
 $log = ['errors' => []];
-
-/*$args = [
-	'limit' => 100,
-	'filter[sites][]' => '2steblya',
-	'filter[maxQuantity]' => 0
-];
-$products = apiGET('store/products', $args);
-if(!$products->pagination->totalCount) die();
-$args = [
-
-];
-$ostatkiCountResponse = apiPOST('store/inventories/upload',$args);
-$log['products0quantity'] = $products;
-$args = [
-
-];
-die(json_encode($log));*/
-
 $urls = [
 	'2steblya' => 'https://2steblya.ru/tstore/yml/81f7b18311537d636b0044cd46380d01.yml'
 	//'2steblya' => 'https://tilda.imb-service.ru/file/get/e51ac7a9e59a5d2b84a945de066810c7.yml'
@@ -48,7 +32,8 @@ die(json_encode($log));
 function arrayToYml($catalog)
 {
 	/**
-	 * собираем и сохраянем yml файл 
+	 * собираем и сохраянем yml файл
+	 * сохраняем в текстовый файл json, чтобы использовать его в preserveDisabledOffers
 	 */
 	$out = [];
 	$out[] = '<?xml version="1.0" encoding="UTF-8"?>';

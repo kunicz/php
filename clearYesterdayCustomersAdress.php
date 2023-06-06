@@ -1,5 +1,5 @@
 <?
-require __DIR__ . '/inc/functions-api.php';
+require __DIR__ . '/inc/functions-apiRetailCrm.php';
 
 /**
  * получаем заказы за вчера
@@ -9,8 +9,7 @@ require __DIR__ . '/inc/functions-api.php';
 
 $log = [];
 iterateOrders();
-echo json_encode($log);
-die();
+die(json_encode($log));
 
 function iterateOrders($page = 1)
 {
