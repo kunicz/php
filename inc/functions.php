@@ -17,3 +17,11 @@ function writeLog($text)
 	fwrite($file, date('Y-m-d H:i:s') . ': ' . $text . "\r\n");
 	fclose($file);
 }
+function getLogSummary($log, $preambula, $result, $successDescr = '')
+{
+	if ($log['errors'] && count($log['errors'])) {
+		return $preambula . ' не ' . $result . '(' . implode(',', $log['errors']) . ')';
+	} else {
+		return $preambula . ' ' . $result . ($successDescr ? ' (' . $successDescr . ')' : '');
+	}
+}

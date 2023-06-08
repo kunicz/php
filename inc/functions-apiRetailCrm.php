@@ -41,3 +41,8 @@ function apiPOST($method, $args = [])
 	curl_close($ch);
 	return json_decode($server_output);
 }
+function apiErrorLog(&$log, $apiObject, $descr = '')
+{
+	if ($apiObject->success) return;
+	$log['errors'][] = ($descr ? $descr . ' : ' : '') . $apiObject->error->code . ' : ' . $apiObject->error->message;
+}

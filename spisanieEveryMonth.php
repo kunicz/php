@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/functions-apiRetailCrm.php';
 $log = [];
 spisanieOld();
 spisanieNew();
-$log['summary'] = 'заказ "списание" ' . ($log['orderNewResponse']->success ? 'создан' : 'не создан (' . $log['orderNewResponse']->error->code . ': ' . $log['orderNewResponse']->error->message . ')');
+$log['summary'] = getLogSummary($log, 'заказ "списание"', 'создан', $log['orderNewResponse']->order->id);
 writeLog($log['summary']);
 die(json_encode($log));
 
@@ -33,6 +33,7 @@ function spisanieOld()
 	];
 	$orderOldRequest = apiGET('orders', $args);
 	$log['orderOldRequest'] = $orderOldRequest;
+	apiErrorLog($log, $orderOldRequest, 'oldRequest');
 	if (!$orderOldRequest->pagination->totalCount) return;
 	/**
 	 * обновляем статус
@@ -42,7 +43,9 @@ function spisanieOld()
 		'site' => $orderOldRequest->orders[0]->site,
 		'order' => urlencode(json_encode(['status' => 'complete']))
 	];
-	$log['spisanieOldResponse'] = apiPOST('orders/' . $orderOldRequest->orders[0]->id . '/edit', $args);
+	$spisanieOldResponse = apiPOST('orders/' . $orderOldRequest->orders[0]->id . '/edit', $args);
+	$log['spisanieOldResponse'] = $spisanieOldResponse;
+	apiErrorLog($log, $spisanieOldResponse, 'oldResponse');
 }
 function spisanieNew()
 {
@@ -69,4 +72,5 @@ function spisanieNew()
 	];
 	$orderNewResponse = apiPOST('orders/create', $args);
 	$log['orderNewResponse'] = $orderNewResponse;
+	apiErrorLog($log, $orderNewResponse, 'new');
 }

@@ -10,7 +10,7 @@ require_once __DIR__ . '/inc/functions-apiRetailCrm.php';
 
 $log = [];
 iterateOrders();
-$log['summary'] = 'адреса клиентов за вчера ' . (empty($log['errors']) ? 'удалены (' . implode(',', $log['customers']) . ')' : 'не удалены (' . implode(',', $log['errors']) . ')');
+$log['summary'] = getLogSummary($log, 'адреса клиентов за вчера', 'удалены', $log['customers'] ? implode(',', $log['customers']) : '');
 writeLog($log['summary']);
 die(json_encode($log));
 
@@ -21,7 +21,7 @@ function iterateOrders($page = 1)
 	$ordersRequest = apiGET('orders', ['filter[createdAtFrom]' => $yesterday, 'filter[createdAtTo]' => $yesterday, 'page' => $page]);
 	$log['ordersRequest'] = $ordersRequest;
 	if (!$ordersRequest->success) {
-		$log['errors'][] = 'ordersRequest : ' . $ordersRequest->error->code . ': ' . $ordersRequest->error->message;
+		apiErrorLog($log, $ordersRequest, 'ordersRequest');
 		return;
 	}
 	if (!$ordersRequest->pagination->totalCount) {
@@ -38,7 +38,7 @@ function iterateOrders($page = 1)
 		$customerResponse = apiPOST('customers/' . $order->customer->id . '/edit', $args);
 		$log['editedCustomers'][] = $customerResponse;
 		if (!$customerResponse->success) {
-			$log['errors'][] = 'customerRespose for order ' . $order->id . ' : ' . $customerResponse->error->code . ': ' . $customerResponse->error->message;
+			apiErrorLog($log, $customerResponse, 'customerRespose for order ' . $order->id);
 		} else {
 			$log['customers'][] = $order->customer->id;
 		}

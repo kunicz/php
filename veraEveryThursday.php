@@ -41,6 +41,7 @@ $args = [
 ];
 $orderResponse = apiPOST('orders/create', $args);
 $log['orderResponse'] = $orderResponse;
-$log['summary'] = 'заказ для Веры ' . ($orderResponse->success ? 'создан' : 'не создан (' . $orderResponse->error->code . ': ' . $orderResponse->error->message . ')');
+apiErrorLog($log, $orderResponse);
+$log['summary'] = getLogSummary($log, 'заказ для Веры', 'создан', $orderResponse->order->id);
 writeLog($log['summary']);
 die(json_encode($log));
