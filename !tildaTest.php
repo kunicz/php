@@ -1,11 +1,19 @@
 <?
+require_once __DIR__ . '/vendor/autoload.php';
+
+use php2steblya\File;
+
+$f = new File(__DIR__ . '/test.txt');
+$f->write(time());
+$f->append($f->url);
+die();
+
+/*
 require_once __DIR__ . '/inc/headers-cors.php';
 require_once __DIR__ . '/inc/functions-order.php';
 
-die(json_encode(apiGET('store/products', ['filter[sites][]' => 'ostatki', 'limit' => 100])));
-
 $log = [];
-$orderRaw = json_decode(file_get_contents(__DIR__ . '/tildaOrderLast-2steblya.txt'), true);
+$orderRaw = print_r_reverse(file_get_contents(__DIR__ . '/tildaOrderLast-2steblya.txt'));
 $log['orderData']['tilda'] = $orderRaw;
 $order = prepareOrderAfterTilda('2steblya', $orderRaw);
 $customer = getCustomer($order['zakazchik']['phone']);
@@ -57,4 +65,4 @@ $args = [
 	'order' => urlencode(json_encode($order))
 ];
 //$log['orderResponse'] = apiPOST('orders/create', urlencode(json_encode($args)));
-die(json_encode($log));
+die(json_encode($log));*/
