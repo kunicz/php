@@ -1,7 +1,5 @@
 <?
-require __DIR__ . '/inc/headers-cors.php';
-require __DIR__ . '/inc/functions.php';
-require __DIR__ . '/inc/functions-apiRetailCrm.php';
+require_once __DIR__ . '/inc/functions.php';
 
 /**
  * синхронизируем каталог товаров Тильды и RetailCrm через yml
@@ -10,7 +8,7 @@ require __DIR__ . '/inc/functions-apiRetailCrm.php';
 
 use LireinCore\YMLParser\YML;
 
-$log = ['errors' => []];
+$log = [];
 $urls = [
 	'2steblya' => 'https://2steblya.ru/tstore/yml/81f7b18311537d636b0044cd46380d01.yml'
 	//'2steblya' => 'https://tilda.imb-service.ru/file/get/e51ac7a9e59a5d2b84a945de066810c7.yml'
@@ -26,6 +24,8 @@ foreach ($urls as $site => $url) {
 	$catalog = preserveDisabledOffers($catalog);
 	$log['catalogOptimized'] = $catalog;
 	arrayToYml($catalog);
+	$log['summary'] = 'каталог для ' . $site . ' ' . (empty($log['errors']) ? ' обновлен' : ' не обновлен (' . implode(',', $log['errors']) . ')');
+	writeLog($log['summary']);
 }
 die(json_encode($log));
 

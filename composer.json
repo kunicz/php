@@ -1,0 +1,6 @@
+{
+	"require": {
+		"vlucas/phpdotenv": "^5.5",
+		"lireincore/ymlparser": "^3.2"
+	}
+}

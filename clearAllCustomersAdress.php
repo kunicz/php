@@ -1,6 +1,6 @@
 <?
-require __DIR__ . '/inc/headers-cors.php';
-require __DIR__ . '/inc/functions-apiRetailCrm.php';
+require_once __DIR__ . '/inc/headers-cors.php';
+require_once __DIR__ . '/inc/functions-apiRetailCrm.php';
 
 /*
 на момент написания скрипта в базе было 800 клиентов (40 страниц по 20 клиентов)

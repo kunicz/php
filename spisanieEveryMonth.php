@@ -1,14 +1,18 @@
 <?
-require __DIR__ . '/inc/functions-apiRetailCrm.php';
+require_once __DIR__ . '/inc/functions.php';
+require_once __DIR__ . '/inc/functions-order.php';
+require_once __DIR__ . '/inc/functions-apiRetailCrm.php';
 
 /*
 	помечаем списание за прошедший месяц как "выполнено"
 	создаем новое списание на следующий месяц
-	cron: каждое первое число каждого месяца в 10:00
+	cron: каждое первое число каждого месяца в 10:10
 */
 $log = [];
 spisanieOld();
 spisanieNew();
+$log['summary'] = 'заказ "списание" ' . ($log['orderNewResponse']->success ? 'создан' : 'не создан (' . $log['orderNewResponse']->error->code . ': ' . $log['orderNewResponse']->error->message . ')');
+writeLog($log['summary']);
 die(json_encode($log));
 
 function spisanieOld()

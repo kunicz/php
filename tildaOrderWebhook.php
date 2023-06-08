@@ -1,5 +1,5 @@
 <?
-require __DIR__ . '/inc/functions.php';
-
-writeFile(__DIR__ . '/tildaLastOrder.txt', json_encode($_POST));
+require_once __DIR__ . '/inc/functions.php';
+$order = print_r($_POST);
+writeFile(__DIR__ . '/tildaOrderLast-2steblya.txt', $order);
 die();
