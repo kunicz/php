@@ -1,1 +1,4 @@
 .env
+.gitattributes
+composer.lock
+vendor/

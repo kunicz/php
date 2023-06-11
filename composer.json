@@ -5,7 +5,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"php2steblya\\": "/classes"
+			"php2steblya\\": "classes/"
 		}
 	}
 }

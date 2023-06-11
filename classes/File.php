@@ -4,32 +4,31 @@ namespace php2steblya;
 
 class File
 {
-	public $url;
-	public $text;
+	private $url;
+	private $text;
 	private $file;
 
 	public function __construct(string $url)
 	{
 		$this->url = $url;
+		$this->text = file_get_contents($url);
 	}
 	public function write(string $text)
 	{
-		$this->open('w');
+		$this->file = fopen($this->url, 'w');
+		$this->text = $text;
 		fwrite($this->file, $text);
-		$this->close();
+		fclose($this->file);
 	}
 	public function append(string $text)
 	{
-		$this->open('a');
+		$this->file = fopen($this->url, 'a');
+		$this->text .= "\r\n" . $text;
 		fwrite($this->file, "\r\n" . $text);
-		$this->close();
-	}
-	private function open(string $method)
-	{
-		$this->file = fopen($this->url, $method);
-	}
-	private function close()
-	{
 		fclose($this->file);
+	}
+	public function getContents()
+	{
+		return $this->text;
 	}
 }

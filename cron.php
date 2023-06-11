@@ -1,13 +1,23 @@
 <?
 require_once __DIR__ . '/!autoload.php';
 
-if (isset($_GET['script'])) {
-	$className = $_GET['script'];
+$args = [];
+foreach ($argv as $arg) {
+	if (strpos($arg, '=') !== false) {
+		list($name, $value) = explode('=', $arg, 2);
+		$args[$name] = $value;
+	}
+}
+if (empty($args)) {
+	die('no arguments passed');
+}
+if (isset($args['script'])) {
+	$className = $args['script'];
 	$class = 'php2steblya\\scripts\\' . $className;
 	if (class_exists($class)) {
 		switch ($className) {
 			case 'TildaOrderWebhook':
-				$scriptInstance = new $class($_GET['site']);
+				$scriptInstance = new $class($args['site']);
 				break;
 			default:
 				$scriptInstance = new $class();
@@ -18,6 +28,5 @@ if (isset($_GET['script'])) {
 		die('script not found');
 	}
 } else {
-	header('Location: https://2steblya.ru/php');
-	die();
+	die('script not passed');
 }
