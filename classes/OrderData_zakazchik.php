@@ -9,7 +9,7 @@ class OrderData_zakazchik
 	public $firstName;
 	public $lastName;
 	public $patronymic;
-	public array $messenger;
+	public $telegram;
 	public $phone;
 	private bool $onanim;
 	private bool $poluchatel;
@@ -45,8 +45,8 @@ class OrderData_zakazchik
 	}
 	public function setMesenger($telegram)
 	{
-		$this->messenger[0]['vendor'] = 'telegram';
-		$this->messenger[0]['value'] = $telegram;
+		if (!preg_match('/^[A-Za-z0-9_.-]+$/', $telegram)) return;
+		$this->telegram = strtolower($telegram);
 	}
 	public function onanim()
 	{

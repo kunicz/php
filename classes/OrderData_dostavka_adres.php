@@ -21,7 +21,9 @@ class OrderData_dostavka_adres
 		if ($this->region) $adres[] = $this->region;
 		if ($this->city) $adres[] = 'г. ' . $this->city;
 		if ($this->street) $adres[] = $this->street;
-		if ($this->building) $adres[] = $this->building . ($this->housing ? 'к' . $this->housing : '') . ($this->house ? 'с' . $this->house : '');
+		if ($this->building) $adres[] = 'д. ' . $this->building;
+		if ($this->housing) $adres[] = 'корп. ' . $this->housing;
+		if ($this->house) $adres[] = 'стр. ' . $this->house;
 		if ($this->flat) $adres[] = 'кв. ' . $this->flat;
 		if ($this->block) $adres[] = 'подъезд ' . $this->block;
 		if ($this->floor) $adres[] = 'этаж ' . $this->floor;

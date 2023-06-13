@@ -4,7 +4,6 @@ namespace php2steblya;
 
 class OrderData_dostavka extends OrderData_dostavka_adres
 {
-	public $adress;
 	public $date;
 	public $interval;
 	public $cost;
@@ -15,6 +14,7 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	{
 		$this->auto = false;
 		$this->cost = 500;
+		$this->netCost = 0;
 		$this->type = 'Доставка курьером';
 	}
 	public function isAuto()

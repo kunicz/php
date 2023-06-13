@@ -3,10 +3,10 @@
 namespace php2steblya;
 
 use php2steblya\Logger;
+use php2steblya\LoggerException as Exception;
 
 class Api
 {
-	protected $log;
 	public $response;
 	private $queryString;
 	private $queryStringArgs;
@@ -16,13 +16,11 @@ class Api
 
 	public function get(string $method, array $args)
 	{
-		$this->log = new Logger('api GET /' . $method);
 		$this->curl('get', $method, $args);
 		return $this->response;
 	}
 	public function post(string $method, array $args)
 	{
-		$this->log = new Logger('api POST /' . $method);
 		$this->curl('post', $method, $args);
 		return $this->response;
 	}
@@ -51,10 +49,9 @@ class Api
 			if (!$response) throw new \Exception('api (' . $type . ' ' . $method . ') returned null');
 			$this->response = json_decode($response);
 			if (!$this->response) throw new \Exception('api (' . $type . ' ' . $method . ') returned with error -> ' . $response);
-		} catch (\Exception $e) {
-			$this->log->pushError($e->getMessage());
-			$this->log->writeSummary();
-			die($this->log->getJson());
+		} catch (Exception $e) {
+			$log = new Logger('api curl');
+			$e->abort($log);
 		}
 		curl_close($ch);
 	}

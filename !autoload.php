@@ -9,5 +9,5 @@ $dotenv->load();
 
 function allowed_sites(): array
 {
-	return explode('&&', $_SERVER['allowed_sites']);
+	return explode(',', $_SERVER['allowed_sites']);
 }

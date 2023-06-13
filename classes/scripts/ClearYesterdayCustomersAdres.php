@@ -3,13 +3,15 @@
 namespace php2steblya\scripts;
 
 use php2steblya\Logger;
-use php2steblya\ApiRetailCrm as api;
+use php2steblya\ApiRetailCrm as Api;
+use php2steblya\LoggerException as Exception;
 
 class ClearYesterdayCustomersAdres
 {
 	public $log;
 	private $response;
 	private $orders;
+	private array $customersIds;
 
 	/**
 	 * получаем заказы за вчера
@@ -22,8 +24,12 @@ class ClearYesterdayCustomersAdres
 	{
 		$this->log = new Logger('clear yesterday customer\'s adreses');
 		$this->collectOrders();
-		if (!$this->response->getCount()) return;
+		if (!$this->response->getCount()) {
+			$this->log->pushNote('orders not found');
+			return;
+		}
 		$this->clearAdreses();
+		$this->log->setRemark(implode(',', $this->customersIds));
 		$this->log->writeSummary();
 	}
 	/**
@@ -42,22 +48,21 @@ class ClearYesterdayCustomersAdres
 					'createdAtTo' => $yesterday
 				]
 			];
-			$api = new api();
+			$api = new Api();
 			$api->get('orders', $args);
-			$this->log->push('queryString', $args, 0);
-			$this->log->push('response', $api->response, 0);
+			$this->log->insert('collectOrders');
+			$this->log->push('queryString', $args);
+			$this->log->push('response', $api->response);
 			if ($api->hasErrors()) {
-				throw new \Exception($api->getError());
+				throw new Exception($api->getError());
 			}
 			if (!$api->getCount()) {
-				$this->log->pushError('no orders found');
+				$this->log->pushNote('no orders found');
 			}
 			$this->response = $api;
 			$this->orders = $api->response->orders;
-		} catch (\Exception $e) {
-			$this->log->pushError($e->getMessage());
-			$this->log->writeSummary();
-			die($this->log->getJson());
+		} catch (Exception $e) {
+			$e->abort($this->log);
 		}
 	}
 	/**
@@ -68,30 +73,24 @@ class ClearYesterdayCustomersAdres
 	public function clearAdreses(): void
 	{
 		try {
-			$customersIds = [];
 			foreach ($this->orders as $order) {
 				$args = [
 					'by' => 'id',
 					'site' => $order->site,
-					'customer' => urlencode(json_encode(['address' => ['text' => '']]))
+					'customer' => json_encode(['address' => ['text' => '']])
 				];
-				$api = new api();
+				$api = new Api();
 				$api->post('customers/' . $order->customer->id . '/edit', $args);
-				$this->log->push('queryString', $args, 1);
-				$this->log->push('response', $api->response, 1);
+				$this->log->insert('clearAdreses[' . $order->customer->id . ']');
+				$this->log->push('queryString', $args);
+				$this->log->push('response', $api->response);
 				if ($api->hasErrors()) {
-					throw new \Exception($api->getError());
+					throw new Exception($api->getError());
 				}
-				if (!$api->getCount()) {
-					throw new \Exception('no customers found for order ' . $order->id);
-				}
-				$customersIds[] = $order->customer->id;
+				$this->customersIds[] = $order->customer->id;
 			}
-			$this->log->setRemark(implode(',', $customersIds));
-		} catch (\Exception $e) {
-			$this->log->pushError($e->getMessage());
-			$this->log->writeSummary();
-			die($this->log->getJson());
+		} catch (Exception $e) {
+			$e->abort($this->log);
 		}
 	}
 }

@@ -3,7 +3,8 @@
 namespace php2steblya\scripts;
 
 use php2steblya\Logger;
-use php2steblya\ApiRetailCrm as api;
+use php2steblya\ApiRetailCrm as Api;
+use php2steblya\LoggerException as Exception;
 
 class UnlimitedBukets
 {
@@ -15,7 +16,10 @@ class UnlimitedBukets
 	{
 		$this->log = new Logger('products with zero inventories');
 		$this->collectZeroProducts();
-		if (!$this->response->getCount()) return;
+		if (!$this->response->getCount()) {
+			$this->log->pushNote('no products found');
+			return;
+		}
 		$this->unlimiteProducts();
 	}
 	/**
@@ -33,24 +37,20 @@ class UnlimitedBukets
 				]
 			];
 			foreach (allowed_sites() as $site) {
-				$args['filter']['sites'][] = str_replace(' ', '', strtolower($site)); //Stay True flower => staytrueflowers
+				$args['filter']['sites'][] = $site;
 			}
-			$api = new api();
+			$api = new Api();
 			$api->get('store/products', $args);
-			$this->log->push('queryString', $args, 0);
-			$this->log->push('response', $api->response, 0);
+			$this->log->insert('collect products');
+			$this->log->push('queryString', $args);
+			$this->log->push('response', $api->response);
 			if ($api->hasErrors()) {
-				throw new \Exception($api->getError());
-			}
-			if (!$api->getCount()) {
-				$this->log->pushError('no products found');
+				throw new Exception($api->getError());
 			}
 			$this->response = $api;
 			$this->products = $api->response->products;
-		} catch (\Exception $e) {
-			$this->log->pushError($e->getMessage());
-			$this->log->writeSummary();
-			die($this->log->getJson());
+		} catch (Exception $e) {
+			$e->abort($this->log);
 		}
 	}
 	/**
@@ -82,20 +82,19 @@ class UnlimitedBukets
 			$args = [
 				'offers' => json_encode($offers)
 			];
-			$api = new api();
+			$api = new Api();
 			$api->post('store/inventories/upload', $args);
-			$this->log->push('offers', $offers, 1);
-			$this->log->push('queryString', $args, 1);
-			$this->log->push('response', $api->response, 1);
+			$this->log->insert('unlimite inventories');
+			$this->log->push('offers', $offers);
+			$this->log->push('queryString', $args);
+			$this->log->push('response', $api->response);
 			if ($api->hasErrors()) {
-				throw new \Exception($api->getError());
+				throw new Exception($api->getError());
 			}
 			$this->log->setRemark($names);
 			$this->log->writeSummary();
-		} catch (\Exception $e) {
-			$this->log->pushError($e->getMessage());
-			$this->log->writeSummary();
-			die($this->log->getJson());
+		} catch (Exception $e) {
+			$e->abort($this->log);
 		}
 	}
 }

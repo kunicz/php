@@ -1,0 +1,56 @@
+{
+	"name-zakazchika": "Test Webhook Order User",
+	"phone-zakazchika": "+79119999999",
+	"messenger-zakazchika": "testUser",
+	"dostavka-date": "2023-06-20",
+	"dostavka-interval": "с 16:00 до 20:00",
+	"dostavka-variant": "Доставка курьером",
+	"dostavka-price": "500",
+	"adres-poluchatelya-city": "Москва",
+	"adres-poluchatelya-street": "Бирюлевская",
+	"adres-poluchatelya-dom": "39",
+	"adres-poluchatelya-kvartira": "17",
+	"adres-poluchatelya-stroenie": "2A",
+	"adres-poluchatelya-etazh": "3",
+	"adres-poluchatelya-domofon": "31к1988",
+	"text-v-kartochku": "Милейшей девочке по имени Катя :) Не много подниму тебе настроение в этот отвратительный будний день.",
+	"name-poluchatelya": "Екатерина",
+	"phone-poluchatelya": "+7916-789-61-32",
+	"uznat-adres-u-poluchatelya": "true",
+	"florist-comment": "делай, че по кайфу, брат",
+	"courier-comment": "test string\nmultistring",
+	"otkuda-uznal-o-nas": "something new",
+	"ya-client-id": "1686567887390999999",
+	"payment": {
+		"sys": "yakassa",
+		"systranid": "2c191e5d-000f-5000-8000-192adda018fd",
+		"orderid": "1354789391",
+		"products": [
+			{
+				"name": "ЭТО ЛЕТО БУДЕТ ЛУТШИМ",
+				"quantity": "1",
+				"amount": "25000",
+				"externalid": "D1leJGEr0RBUn5dOV5yL#xEkTrzuy8xkoRaoNxTRe",
+				"price": "25000",
+				"sku": "069-25x",
+				"options": [
+					{
+						"option": "фор мат",
+						"variant": "коробка"
+					},
+					{
+						"option": "выебри карточку",
+						"variant": "без айдентики"
+					},
+					{
+						"option": "цена",
+						"variant": "25000"
+					}
+				]
+			}
+		],
+		"amount": "25000"
+	},
+	"formid": "form461079073",
+	"formname": "Cart"
+}

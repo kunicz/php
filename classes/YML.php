@@ -4,6 +4,7 @@ namespace php2steblya;
 
 use php2steblya\Logger;
 use LireinCore\YMLParser\YML as YMLparser;
+use php2steblya\LoggerException as Exception;
 
 class YML
 {
@@ -33,10 +34,8 @@ class YML
 			} else {
 				$log->pushError($shop->getErrors());
 			}
-		} catch (\Exception $e) {
-			$log->pushError($e->getMessage());
-			$log->writeSummary();
-			die($log->getJson());
+		} catch (Exception $e) {
+			$e->abort($log);
 		}
 		return $catalog;
 	}

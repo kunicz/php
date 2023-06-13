@@ -16,14 +16,12 @@ class TildaYmlCatalog
 	public $log;
 	private $tildaYmlUrl;
 	private $site;
-	private $iteration;
 	private $catalog;
 	private array $offersIds;
 	private array $filePaths;
 
 	public function init()
 	{
-		$this->log = new Logger('tilda yml catalogs sync');
 		$urls = [
 			[
 				'site' => '2steblya',
@@ -34,23 +32,25 @@ class TildaYmlCatalog
 			//'Stay True flowers' => 'https://tilda.imb-service.ru/file/get/8aec43b5129e6d08c5245877df744cec.yml'
 		];
 		for ($i = 0; $i < count($urls); $i++) {
-			$this->iteration = $i;
-			$this->site = $urls[$this->iteration]['site'];
-			$this->tildaYmlUrl = $urls[$this->iteration]['url'];
+			$this->site = $urls[$i]['site'];
+			$this->tildaYmlUrl = $urls[$i]['url'];
 			$this->filePaths = [
-				'catalog.yml' => dirname(dirname(__FILE__)) . '/scripts/TildaYmlCatalog_' . $this->site . '.yml',
-				'catalog_old.txt' => dirname(dirname(__FILE__)) . '/scripts/TildaYmlCatalog_' . $this->site . '_old.txt',
-				'catalog_hash.txt' => dirname(dirname(__FILE__)) . '/scripts/TildaYmlCatalog_' . $this->site . '_hash.txt'
+				'catalog.yml' => dirname(dirname(dirname(__FILE__))) . '/TildaYmlCatalog_' . $this->site . '.yml',
+				'catalog.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaYmlCatalog_' . $this->site . '.txt',
+				'catalog_hash.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaYmlCatalog_' . $this->site . '_hash.txt'
 			];
-			$this->log->push('site', $this->site, $this->iteration);
+			$this->log = new Logger('tilda yml catalogs sync');
+			$this->log->insert($this->site);
 			if (!$this->isChanged()) continue;
 			$this->catalog = YML::ymlToArray($this->tildaYmlUrl);
-			$this->log->push('catalogInitial', $this->catalog, $this->iteration);
+			$this->log->push('catalogInitial', $this->catalog);
 			$this->optimizeOffers();
 			$this->preserveDisabledOffers();
 			$yml = YML::arrayToYml($this->catalog);
 			$fileYml = new File($this->filePaths['catalog.yml']);
 			$fileYml->write($yml);
+			$fileOld = new File($this->filePaths['catalog.txt']);
+			$fileOld->write(json_encode($this->catalog));
 			$this->log->setRemark($this->site);
 			$this->log->writeSummary();
 		}
@@ -112,7 +112,7 @@ class TildaYmlCatalog
 		foreach ($this->catalog['offers'] as $offer) {
 			$this->offersIds[] = $offer['id']; //собираем массив айдишников (используется в preserveDisabledProducts)
 		}
-		$this->log->push('offersRemoved', $offersRemovedNames, $this->iteration);
+		$this->log->push('offersRemoved', $offersRemovedNames);
 	}
 	private function preserveDisabledOffers()
 	{
@@ -122,7 +122,7 @@ class TildaYmlCatalog
 		 * добавляем эти товары в новый каталог (таким образом не теряем ни один товар, который когда-либо был опубликован на сайте)
 		 * обновляем файл
 		 */
-		$catalogOldFile = new File($this->filePaths['catalog_old.txt']);
+		$catalogOldFile = new File($this->filePaths['catalog.txt']);
 		$catalogOld = json_decode($catalogOldFile->getContents(), true);
 		$offersToPreserve = [];
 		foreach ($catalogOld['offers'] as $offer) {
@@ -131,6 +131,6 @@ class TildaYmlCatalog
 			$offersToPreserve[] = $offer;
 		}
 		$this->catalog['offersCount'] = count($this->catalog['offers']);
-		$this->log->push('offersPreserved', $offersToPreserve, $this->iteration);
+		$this->log->push('offersPreserved', $offersToPreserve);
 	}
 }

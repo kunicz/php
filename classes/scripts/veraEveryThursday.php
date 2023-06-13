@@ -1,47 +1,57 @@
 <?
 
-require_once __DIR__ . '/dotenv.php';
+namespace php2steblya\scripts;
 
 use php2steblya\Logger;
 use php2steblya\OrderData;
-use php2steblya\ApiRetailCrm_orders as apiOrders;
+use php2steblya\ApiRetailCrm as Api;
+use php2steblya\LoggerException as Exception;
 
 /**
  * создаем заказ для Веры Александровны в среду (доставка на четверг)
  * cron: по средам в 10:10
  */
 
-$log = new Logger('vera thursday order');
+class VeraEveryThursday
+{
+	public $log;
 
-$orderData = new OrderData();
-$orderData->setSite('Stay True flowers');
-$orderData->setCustomerId(551);
-$orderData->zakazchik->setFirstName('Вера');
-$orderData->zakazchik->setPatronymic('Александровна');
-$orderData->zakazchik->setPhone($_SERVER['vera_phone_zakazchika']);
-$orderData->dostavka->setRegion('Московская область');
-$orderData->dostavka->setCity('Химки');
-$orderData->dostavka->setStreet($_SERVER['vera_street']);
-$orderData->dostavka->setBuilding($_SERVER['vera_building']);
-$orderData->dostavka->setFlat($_SERVER['vera_flat']);
-$orderData->dostavka->setFloor(2);
-$orderData->dostavka->setDate(date('Y-m-d', strtotime('+1 day')));
-$orderData->dostavka->setCost(700);
-$orderData->dostavka->setNetCost(700);
-$orderData->poluchatel->setName('Алена');
-$orderData->poluchatel->setPhone($_SERVER['vera_phone_poluchaelya']);
-
-$order = new apiOrders();
-$args = [
-	'site=' . $orderData->getSite(),
-	'order=' . $orderData->getCrm()
-];
-$order->post('orders/create', $args);
-$log->push('orderResponse', $order);
-if (!$order->response->success) {
-	$log->pushError($order->response->getError());
-} else {
-	$log->setRemark($order->response->order->id);
+	public function init(): void
+	{
+		try {
+			$this->log = new Logger('vera thursday order');
+			$orderData = new OrderData($_ENV['site_stf_id']);
+			$orderData->setCustomerId(551);
+			$orderData->zakazchik->setFirstName('Вера');
+			$orderData->zakazchik->setPatronymic('Александровна');
+			$orderData->zakazchik->setPhone($_ENV['vera_phone_zakazchika']);
+			$orderData->dostavka->setRegion('Московская область');
+			$orderData->dostavka->setCity('Химки');
+			$orderData->dostavka->setStreet($_ENV['vera_street']);
+			$orderData->dostavka->setBuilding($_ENV['vera_building']);
+			$orderData->dostavka->setFlat($_ENV['vera_flat']);
+			$orderData->dostavka->setFloor(2);
+			$orderData->dostavka->setDate(date('Y-m-d', strtotime('+1 day')));
+			$orderData->dostavka->setCost(700);
+			$orderData->dostavka->setNetCost(700);
+			$orderData->poluchatel->setName('Алена');
+			$orderData->poluchatel->setPhone($_ENV['vera_phone_poluchaelya']);
+			$orderData->items->pushTransportItem();
+			$args = [
+				'site' => $_ENV['site_stf_id'],
+				'order' => $orderData->getCrm()
+			];
+			$api = new Api();
+			$api->post('orders/create', $args);
+			$this->log->push('queryString', $args);
+			$this->log->push('response', $api->response);
+			$this->log->push('orderData', $orderData->getCrm(false));
+			if ($api->hasErrors()) {
+				throw new Exception($api->getError());
+			}
+			$this->log->setRemark($api->response->order->id);
+		} catch (Exception $e) {
+			$e->abort($this->log);
+		}
+	}
 }
-$log->writeSummary();
-die($log->getJson());

@@ -2,8 +2,9 @@
 
 namespace php2steblya;
 
-use php2steblya\ApiRetailCrm as api;
+use php2steblya\Logger;
 use php2steblya\OrderData_items as Items;
+use php2steblya\LoggerException as Exception;
 use php2steblya\OrderData_comments as Comments;
 use php2steblya\OrderData_payments as Payments;
 use php2steblya\OrderData_dostavka as Dostavka;
@@ -13,6 +14,7 @@ use php2steblya\OrderData_poluchatel as Poluchatel;
 
 class OrderData
 {
+	public $log;
 	private $site;
 	public object $zakazchik;
 	public object $poluchatel;
@@ -22,20 +24,25 @@ class OrderData
 	public object $payments;
 	public object $analytics;
 	private $cardText;
-	private $customer;
 	private $customerId;
+	private $status;
+	private array $customFields;
 
-	public function __construct()
+	public function __construct($site)
 	{
+		$this->log = new Logger();
+		$this->setSite($site);
 		$this->poluchatel = new Poluchatel();
 		$this->zakazchik = new Zakazchik();
-		$this->items = new Items();
+		$this->items = new Items($site);
 		$this->payments = new Payments();
 		$this->dostavka = new Dostavka();
 		$this->comments = new Comments();
 		$this->comments->setFlorist('');
 		$this->comments->setCourier('');
 		$this->analytics = new Analytics();
+		$this->status = 'new';
+		$this->customFields = [];
 	}
 	public function fromTilda(array $orderFromTilda)
 	{
@@ -49,11 +56,10 @@ class OrderData
 		$this->zakazchik->znaetAdres($orderFromTilda['uznat-adres-u-poluchatelya']);
 		if ($orderFromTilda['onanim']) $this->zakazchik->onanim();
 		if ($this->zakazchik->phone == $this->poluchatel->phone) $this->zakazchik->poluchatel();
-		$this->searchCustomerCrm($this->zakazchik->phone);
 		//товары		
-		$this->items->setSite($this->site);
 		$this->items->fromTilda($orderFromTilda['payment']['products']);
-		//платежи		
+		$this->addCustomField('bukety_v_zakaze', $this->items->getBukets());
+		//платежи
 		$this->payments->fromTilda($orderFromTilda['payment']);
 		//доставка		
 		$this->dostavka->setCity($orderFromTilda['adres-poluchatelya-city']);
@@ -88,7 +94,8 @@ class OrderData
 		$order = [
 			'externalId' => 'php_' . time(),
 			'orderMethod' => 'php',
-			'customer' => $this->customerId,
+			'status' => $this->status,
+			'customer' => ['id' => $this->customerId],
 			'firstName' => $this->zakazchik->firstName,
 			'lastName' => $this->zakazchik->lastName,
 			'patronymic' => $this->zakazchik->patronymic,
@@ -103,21 +110,24 @@ class OrderData
 				'time' => [
 					'custom' => $this->dostavka->interval
 				],
-				'cost' => $this->dostavka->price
+				'cost' => $this->dostavka->cost,
+				'netCost' => $this->dostavka->netCost
 			],
 			'items' => $this->items->getCrm(),
 			'payments' => $this->payments->getCrm(),
 			'customFields' => [
+				'card' => $this->items->getCards(),
 				'text_v_kartochku' => $this->cardText,
 				'onanim' => $this->zakazchik->isOnanim(),
 				'name_poluchatelya' => $this->poluchatel->name,
 				'bukety_v_zakaze' => $this->items->getBukets(),
 				'phone_poluchatelya' => $this->poluchatel->phone,
 				'otkuda_o_nas_uznal' => $this->analytics->otkudaUznal,
+				'messenger-zakazchika' => $this->zakazchik->telegram,
 				'stoimost_dostavki_iz_tildy' => $this->dostavka->cost,
+				'adres_poluchatelya' => $this->dostavka->getAdresText(),
 				'zakazchil_poluchatel' => $this->zakazchik->isPoluchatel(),
-				'ya_client_id_order' => $this->analytics->yandex['clientId'],
-				'messenger-zakazchika' => $this->zakazchik->messenger[0]['value']
+				'ya_client_id_order' => $this->analytics->yandex['clientId']
 			],
 			'source' => [
 				'keyword' => $this->analytics->utm['term'],
@@ -127,38 +137,11 @@ class OrderData
 				'campaign' => $this->analytics->utm['campaign']
 			]
 		];
-		if (!$readyToApi) return $order;
-		return urlencode(json_encode($order));
-	}
-	public function searchCustomerCrm($phone)
-	{
-		try {
-			$log = new Logger('search customer by phone');
-			$args = [
-				'filter' => [
-					'name' => $phone
-				]
-			];
-			$api = new api();
-			$api->get('customers', $args);
-			$log->push('queryString', $args, 'orderCustomer');
-			$log->push('response', $api->response, 'orderCustomer');
-			if ($api->hasErrors()) {
-				throw new \Exception($api->getError());
-			}
-			if (!$api->getCount()) {
-				$log->pushError('customer not found');
-			}
-			$this->customerId = $api->response->customers[0]->id;
-		} catch (\Exception $e) {
-			$log->pushError($e->getMessage());
-			$log->writeSummary();
-			die($log->getJson());
+		foreach ($this->customFields as $key => $value) {
+			$order['customFields'][$key] = $value;
 		}
-	}
-	public function setCardText($text)
-	{
-		$this->cardText = $text;
+		if (!$readyToApi) return $order;
+		return json_encode($order);
 	}
 	public function getSite()
 	{
@@ -167,17 +150,33 @@ class OrderData
 	public function setSite($data)
 	{
 		try {
-			$log = new Logger('creating order -> setSite()');
-			if (!in_array($data, allowed_sites())) throw new \Exception('site "' . $data . '" is not allowed');
+			$this->log->push('site', $data);
+			if (!in_array($data, allowed_sites())) {
+				throw new Exception('site "' . $data . '" is not allowed');
+			}
 			$this->site = $data;
-		} catch (\Exception $e) {
-			$log->pushError($e->getMessage());
-			$log->writeSummary();
-			die($log->getJson());
+		} catch (Exception $e) {
+			$e->abort($this->log);
 		}
+	}
+	public function getCustomerId()
+	{
+		return $this->customerId;
 	}
 	public function setCustomerId($data)
 	{
 		$this->customerId = $data;
+	}
+	public function setStatus($data)
+	{
+		$this->status = $data;
+	}
+	public function setCardText($text)
+	{
+		$this->cardText = $text;
+	}
+	public function addCustomField($key, $value)
+	{
+		$this->customFields[$key] = $value;
 	}
 }

@@ -8,6 +8,10 @@ class OrderData_payments
 {
 	private array $payments;
 
+	public function __construct()
+	{
+		$this->payments = [];
+	}
 	public function fromTilda(array $paymentFromTilda)
 	{
 		$payment = new Payment($paymentFromTilda);
