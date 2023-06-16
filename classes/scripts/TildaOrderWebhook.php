@@ -5,155 +5,175 @@ namespace php2steblya\scripts;
 use php2steblya\File;
 use php2steblya\Logger;
 use php2steblya\OrderData;
-use php2steblya\ApiRetailCrm as Api;
-use php2steblya\LoggerException as Exception;
+use php2steblya\ApiRetailCrmResponse_customers_get as Customers_get;
+use php2steblya\ApiRetailCrmResponse_orders_create as Orders_create;
 
 class TildaOrderWebhook
 {
 	public $log;
 	private $site;
+	private $payed;
+	private $source;
+	private array $postData;
 	private array $filePaths;
-	private $orderData;
-	private $orderId;
-	private $customerId;
+	private array $ordersIds;
 
-	public function __construct($site, $testMode = false)
+	public function __construct(string $site, bool $payed = false, bool $testMode = false)
 	{
 		$this->site = $site;
-		$this->log = new Logger('tilda orders webhook');
+		$this->payed = $payed;
+		$this->source = 'tilda orders webhook';
+		$this->log = new Logger($this->source);
 		$this->filePaths = [
 			'orderTest.json' => dirname(dirname(dirname(__FILE__))) . '/testOrder.json',
 			'orders.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrders_' . $site . '.txt',
 			'orderLast.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrderLast_' . $site . '.txt',
+			'notPayed.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_' . $site . '.txt',
 		];
 		if ($testMode) {
 			$testOrderFile = new File($this->filePaths['orderTest.json']);
-			$_POST = json_decode($testOrderFile->getContents(), true);
+			$this->postData = json_decode($testOrderFile->getContents(), true);
+		} else {
+			$this->postData = $_POST;
 		}
-		$this->orderData = new OrderData($this->site);
-		$this->orderData->fromTilda($_POST);
-	}
-	public function init(): void
-	{
-		$this->searchCustomer($this->orderData->zakazchik->phone);
-		$this->crmOrder();
-		$this->crmCustomer();
-		$this->appendOrderToFile();
+		$this->postData['date'] = date('Y-m-d H:i:s');
+		$this->postData['payed'] = $this->payed;
+		$this->postData['customerId'] = null;
 		$this->orderLastToFile();
-		$this->log->setRemark('created order (' . $this->orderId . ') for ' . $_POST['name-zakazchika'] . ' (' . $this->customerId . ')');
+		$this->appendOrderToFile();
+	}
+	public function init()
+	{
+		$this->log->push('postData', $this->postData);
+		if (!$this->isOrderReal()) return;
+		if ($this->isOrderPayed()) {
+			$this->orderPayed();
+		} else {
+			$this->orderNotPayed();
+		}
 		$this->log->writeSummary();
 	}
-	public function searchCustomer($phone)
+	private function isOrderReal(): bool
 	{
-		try {
-			$this->log->insert('search customer by phone');
-			$args = [
-				'filter' => [
-					'name' => $phone
-				]
-			];
-			$api = new Api();
-			$api->get('customers', $args);
-			$this->log->insert('1. search customer');
-			$this->log->push('phone', $phone);
-			$this->log->push('queryString', $args);
-			$this->log->push('response', $api->response);
-			if ($api->hasErrors()) {
-				throw new Exception($api->getError());
-			}
-			if (!$api->getCount()) {
-				$this->log->pushNote('customer not found (' . $phone . ')');
-				$this->customerId = '';
-			} else {
-				$this->customerId = $api->response->customers[0]->id;
-			}
-			$this->orderData->setCustomerId($this->customerId);
-		} catch (Exception $e) {
-			$e->abort($this->log);
+		$conditions = [
+			isset($this->postData['test']), // при привязке вебхука тильда отправляет запрос с &_POST['test'=>'test']
+			!isset($this->postData['formid']) // при удачном завершении заказа тильда отправляет массив, в котором всегда есть "formid"
+		];
+		if (in_array(true, $conditions)) {
+			$this->log->push('isOrderReal', false);
+			return false;
+		} else {
+			$this->log->push('isOrderReal', true);
+			return true;
 		}
 	}
-	private function crmOrder()
+	private function isOrderPayed(): bool
 	{
-		try {
-			$args = [
-				'site' => $this->site,
-				'order' => $this->orderData->getCrm()
-			];
-			$api = new Api();
-			$api->post('orders/create', $args);
-			$this->log->insert('2. create order');
-			$this->log->push('queryString', $args);
-			$this->log->push('response', $api->response);
-			$this->log->push('orderData', $this->orderData->getCrm(false));
-			if ($api->hasErrors()) {
-				throw new Exception($api->getError());
-			}
-			$this->orderId = $api->response->order->id;
-			$this->customerId = $api->response->order->customer->id;
-		} catch (Exception $e) {
-			$e->abort($this->log);
+		if ($this->payed) {
+			$this->log->push('isOrderPayed', true);
+			return true;
+		} else {
+			$this->log->push('isOrderPayed', false);
+			return false;
 		}
 	}
-	private function crmCustomer()
+	private function orderNotPayed()
 	{
-		try {
-			$customerData = $this->customerData();
-			$args = [
-				'by' => 'id',
-				'site' => $this->site,
-				'customer' => json_encode($customerData)
-			];
-			$api = new Api();
-			$api->post('customers/' . $this->customerId . '/edit', $args);
-			$this->log->insert('3. modify customer');
-			$this->log->push('queryString', $args);
-			$this->log->push('response', $api->response);
-			if ($api->hasErrors()) {
-				throw new Exception($api->getError());
-			}
-		} catch (Exception $e) {
-			$e->abort($this->log);
-		}
-	}
-	private function customerData()
-	{
+		$this->collectInFile('notPayed.txt', [time(), $this->postData['payment']['orderid']]);
 		/**
-		 * если клиент уже есть в базе, то не переписываем "откуда узнал"
+		 * summary
 		 */
-		$customerData = [
-			'address' => [
-				'text' => ''
-			],
-			'customFields' => [
-				'telegram' => $this->orderData->zakazchik->telegram,
-				'ya_client_id' => $this->orderData->analytics->yandex['clientId'],
+		$remark = 'recieved order (tilda: ' . $this->postData['payment']['orderid'] . ') | ' . $this->site;
+		$this->log->setRemark($remark);
+	}
+	private function orderPayed()
+	{
+		$this->removeFromUnpayed($this->postData['payment']['orderid']);
+		$this->searchCustomer($this->postData['phone-zakazchika']);
+		/**
+		 * для каждого товара в заказе создаем отдельный заказ в срм
+		 */
+		$this->log->insert('2. create orders');
+		for ($i = 0; $i < count($this->postData['payment']['products']); $i++) {
+			$postData = $this->postData;
+			$postData['payment']['products'] = [$this->postData['payment']['products'][$i]];
+			$postData['payment']['amount'] = $this->postData['payment']['products'][$i]['amount'];
+			if ($postData['payment']['products'][$i]['name'] == 'подписка') { // тут будет правильное условие для товароыв из подписки
+				/**
+				 * тут будет цикл, создающий заказы по подписке
+				 */
+			} else {
+				$orderData = new OrderData($this->site);
+				$orderData->fromTilda($postData);
+				$this->createOrder($orderData);
+			}
+		}
+		/**
+		 * summary
+		 */
+		$products = [];
+		foreach ($this->postData['payment']['products'] as $product) {
+			$products[] = $product['name'];
+		}
+		$remark = 'created order' . (count($this->ordersIds) > 1 ? 's' : '');
+		$remark .= ' (tilda: ' . $this->postData['payment']['orderid'] . ', crm: ' . implode(',', $this->ordersIds) . ')';
+		$remark .= ' for ' . $this->postData['name-zakazchika'] . ($this->postData['customerId'] ? ' (' . $this->postData['customerId'] . ')' : '');
+		$remark .= ', products: ' . implode(', ', $products);
+		$remark .= ' | ' . $this->site;
+		$this->log->setRemark($remark);
+	}
+	private function createOrder($orderData)
+	{
+		$args = [
+			'site' => $this->site,
+			'order' => $orderData->getCrm()
+		];
+		$order = new Orders_create($this->source, $args);
+		$this->ordersIds[] = $order->getOrderId();
+		$this->log->push($order->getOrderId(), $order->getLog());
+	}
+	private function searchCustomer($phone)
+	{
+		$args = [
+			'filter' => [
+				'name' => $phone
 			]
 		];
-		if ($this->customerId) return $customerData;
-		$customerData['customFields']['otkuda_uznal_o_nas'] = $this->orderData->analytics->otkudaUznal;
-		return $customerData;
+		$customer = new Customers_get($this->source, $args, $phone);
+		$this->log->push('1. search customer', $customer->getLog());
+		if (!$customer->hasCustomers()) return;
+		$this->postData['customerId'] = $customer->getCustomersIds()[0];
 	}
 	private function appendOrderToFile()
 	{
-		$ordersFile = new File($this->filePaths['orders.txt']);
+		$this->collectInFile('orders.txt', $this->postData);
+	}
+	private function orderLastToFile()
+	{
+		$orderLastFile = new File($this->filePaths['orderLast.txt']);
+		$orderLastFile->write(print_r($this->postData, true));
+	}
+	private function collectInFile($file, $data)
+	{
+		$ordersFile = new File($this->filePaths[$file]);
 		$orders = $ordersFile->getContents();
 		if ($orders) {
 			$orders = json_decode($orders, true);
 		} else {
 			$orders = [];
 		}
-		$orders[] = $_POST;
+		$orders[] = $data;
 		$ordersFile->write(json_encode($orders));
 	}
-	private function orderLastToFile()
+	private function removeFromUnpayed($data)
 	{
-		$orderLastFile = new File($this->filePaths['orderLast.txt']);
-		$orderLastFile->write(print_r($_POST, true));
-		$products = [];
-		foreach ($_POST['payment']['products'] as $product) {
-			$products[] = $product['name'];
+		$file = new File($this->filePaths['notPayed.txt']);
+		$ids = json_decode($file->getContents(), true);
+		for ($i = 0; $i < count($ids); $i++) {
+			if ($ids[$i][1] != $data) continue;
+			unset($ids[$i]);
+			break;
 		}
-		$this->log->setRemark($_POST['name-zakazchika'] . ' / ' . implode(',', $products));
-		$this->log->writeSummary();
+		$file->write(json_encode($ids));
 	}
 }

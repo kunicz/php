@@ -32,12 +32,12 @@ class Logger
 	{
 		$this->summary = date('Y-m-d H:i:s');
 		$this->summary .= ($this->hasErrors() ? ' | fail | ' : ' | success | ');
-		$this->summary .= $this->source;
+		$this->summary .= (isset($this->contents['parent source']) ? $this->contents['parent source'] . ' : ' : '') . $this->source;
 		if ($this->hasErrors()) {
-			$this->summary .= ' (' . implode(',', $this->errors) . ')';
+			$this->summary .= ' | ' . implode(',', $this->errors);
 		} else {
 			if (!$this->summaryRemark) return;
-			$this->summary .= ' (' . $this->summaryRemark . ')';
+			$this->summary .= ' | ' . $this->summaryRemark;
 		}
 	}
 	public function writeSummary()
@@ -52,7 +52,7 @@ class Logger
 	 */
 	public function pushError($error)
 	{
-		$this->errors[] = $this->contentsKey . ' : ' . $error;
+		$this->errors[] = $error;
 	}
 	private function hasErrors()
 	{
@@ -98,7 +98,8 @@ class Logger
 	{
 		$log = [
 			'source' => $this->source,
-			'errors' => $this->errors
+			'errors' => $this->errors,
+			'remark' => $this->summaryRemark
 		];
 		foreach ($this->contents as $key => $value) {
 			$log[$key] = $value;

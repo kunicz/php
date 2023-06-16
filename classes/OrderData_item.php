@@ -3,12 +3,13 @@
 namespace php2steblya;
 
 use php2steblya\File;
+use php2steblya\OrderData_item_sku as Sku;
 
 class OrderData_item
 {
-	public $sku;
 	public $name;
 	private $site;
+	public object $sku;
 	public int $initialPrice; //цена продажи
 	public int $purchasePrice; //цена закупки
 	public int $transportPrice; //цена продажи измененная (в функции pushTransport)
@@ -19,8 +20,8 @@ class OrderData_item
 	{
 		$this->site = $site;
 		if (!$productFromTilda) return;
-		$this->sku = $productFromTilda['sku'];
 		$this->name = $productFromTilda['name'];
+		$this->setScu($productFromTilda['sku']);
 		$this->initialPrice = (int) $productFromTilda['price'];
 		$this->transportPrice = (int) $productFromTilda['price'];
 		$this->purchasePrice = (int) $productFromTilda['price'];
@@ -30,7 +31,7 @@ class OrderData_item
 	public function getCrm(): array
 	{
 		$item = [
-			'offer' => $this->getOffer(),
+			'offer' => $this->offer(),
 			'productName' => $this->name,
 			'quantity' => $this->quantity,
 			'initialPrice' => $this->transportPrice,
@@ -39,16 +40,14 @@ class OrderData_item
 		];
 		return $item;
 	}
-	private function getOffer(): array
+	private function offer(): array
 	{
 		$offerData = [];
 		switch ($this->name) {
 			case 'Транспортировочное':
-				$offerData['id'] = 1249;
 				$offerData['externalId'] = '214';
 				break;
 			case 'Упаковка':
-				$offerData['id'] = 1258;
 				$offerData['externalId'] =  '223';
 				break;
 		}
@@ -56,7 +55,7 @@ class OrderData_item
 		$catalog = new File(dirname(dirname(__FILE__)) . '/TildaYmlCatalog_' . $this->site . '.txt');
 		$catalog = json_decode($catalog->getContents(), true);
 		foreach ($catalog['offers'] as $offer) {
-			if ($offer['vendorCode'] == $this->sku) $offerData['externalId'] = $offer['id'];
+			if ($offer['vendorCode'] == $this->sku->get()) $offerData['externalId'] = $offer['id'];
 		}
 		return $offerData;
 	}
@@ -65,12 +64,19 @@ class OrderData_item
 		$props = [];
 		if (empty($this->properties)) return $props;
 		foreach ($this->properties as $option) {
+			if (in_array($option['option'], ['выебри карточку', 'выбери карточку']) && in_array($this->name, castrated_items())) continue; //не публикуем карточку для
 			$props[] = [
 				'name' => $option['option'],
-				'value' => $option['variant']
+				'value' => preg_replace('/\s*\([^)]+\)/', '', $option['variant']) //удаляем все, что в скобках
 			];
 		}
-		if (substr($this->sku, -1) == 'v') { // если товар с витрины
+		if ($this->sku->get()) {
+			$props[] = [
+				'name' => 'артикул',
+				'value' => $this->sku->get()
+			];
+		}
+		if ($this->sku->isVitrina()) { // если товар с витрины
 			$props[] = [
 				'name' => 'готов',
 				'value' => 'на витрине'
@@ -84,20 +90,26 @@ class OrderData_item
 		}
 		return $props;
 	}
+	public function pushProperty(array $data)
+	{
+		if (!isset($data['option']) || !isset($data['value'])) return;
+		$this->properties[] = $data;
+	}
 	public function setTransposrPrice($site)
 	{
 		switch ($site) {
-			case '2steblya':
-				$this->transportPrice = $this->initialPrice - (1000 / $this->quantity); //транспортировочное(500) + доставка(500)
+			case $_ENV['site_2steblya_id']:
+				$price = 1000; //транспортировочное(500) + доставка(500)
 				break;
-			case 'Stay True flowers':
-				$this->transportPrice = $this->initialPrice - (700 / $this->quantity); //упаковка х 2(200) + доставка(500)
+			case $_ENV['site_stf_id']:
+				$price = 700; //упаковка х 2(200) + доставка(500)
 				break;
 		}
+		$this->transportPrice = $this->initialPrice - round($price / $this->quantity);
 	}
 	public function setScu($data)
 	{
-		$this->sku = $data;
+		$this->sku = new Sku($data);
 	}
 	public function setQuantity($data)
 	{

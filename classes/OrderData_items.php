@@ -7,9 +7,9 @@ use php2steblya\OrderData_item as Item;
 class OrderData_items
 {
 	private $site;
+	public array $items;
 	private array $cards;
 	private array $bukets;
-	private array $items;
 
 	public function __construct($site)
 	{
@@ -18,15 +18,20 @@ class OrderData_items
 	}
 	public function pushTransportItem()
 	{
-		if (!empty($this->items)) $this->items[0]->setTransposrPrice($this->site);
+		/**
+		 * автоматически добавляем транспортировочное, если товары в заказе есть и это не определенные товары
+		 */
+		if (empty($this->items)) return;
+		if (in_array($this->items[0]->name, castrated_items())) return;
+		$this->items[0]->setTransposrPrice($this->site);
 		$item = new Item($this->site);
 		switch ($this->site) {
-			case '2steblya':
+			case $_ENV['site_2steblya_id']:
 				$item->setPrice(500);
 				$item->setName('Транспортировочное');
 				$item->setQuantity(1);
 				break;
-			case 'staytrueflowers':
+			case $_ENV['site_stf_id']:
 				$item->setPrice(100);
 				$item->setName('Упаковка');
 				$item->setQuantity(2);
@@ -44,6 +49,10 @@ class OrderData_items
 		}
 		$this->pushTransportItem();
 	}
+	public function get()
+	{
+		return $this->items;
+	}
 	public function getCrm(): array
 	{
 		$items = [];
@@ -56,7 +65,8 @@ class OrderData_items
 	{
 		if (empty($item->properties)) return;
 		foreach ($item->properties as $option) {
-			if ($option['option'] != 'выебри карточку') continue;
+			if (in_array($item->name, castrated_items())) continue;
+			if (!in_array($option['option'], ['выебри карточку', 'выбери карточку'])) continue;
 			$this->cards[] = $option['variant'];
 			break;
 		}
@@ -69,11 +79,24 @@ class OrderData_items
 	private function pushBuket($item)
 	{
 		if (empty($item->properties)) return;
+		//name
+		$buket = $item->name;
+		//format
 		foreach ($item->properties as $option) {
 			if (str_replace(' ', '', $option['option']) != 'формат') continue;
-			$this->bukets[] = $item->name . ' - ' . $option['variant'] . ' (' . $item->quantity . ' шт)';
+			$buket .= ' - ' . $option['variant'];
 			break;
 		}
+		//additional props
+		$dops = [];
+		foreach ($item->properties as $option) {
+			if (in_array($option['option'], ['артикул', 'цена', 'выебри карточку', 'выбери карточку', 'фор мат', 'формат'])) continue;
+			$dops[] = str_replace('?', '', $option['option']) . ': ' . $option['variant'];
+		}
+		if (!empty($dops)) $buket .= ' (' . implode(', ', $dops) . ')';
+		//quantity
+		$buket .= ' (' . $item->quantity . ' шт)';
+		$this->bukets[] = $buket;
 	}
 	public function getBukets(): string
 	{

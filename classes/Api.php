@@ -24,7 +24,7 @@ class Api
 		$this->curl('post', $method, $args);
 		return $this->response;
 	}
-	private function curl(string $type, string $method, array $args)
+	public function curl(string $type, string $method, array $args)
 	{
 		$this->queryString($method, $args);
 		$ch = curl_init();

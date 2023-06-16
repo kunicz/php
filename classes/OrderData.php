@@ -4,7 +4,6 @@ namespace php2steblya;
 
 use php2steblya\Logger;
 use php2steblya\OrderData_items as Items;
-use php2steblya\LoggerException as Exception;
 use php2steblya\OrderData_comments as Comments;
 use php2steblya\OrderData_payments as Payments;
 use php2steblya\OrderData_dostavka as Dostavka;
@@ -15,7 +14,6 @@ use php2steblya\OrderData_poluchatel as Poluchatel;
 class OrderData
 {
 	public $log;
-	private $site;
 	public object $zakazchik;
 	public object $poluchatel;
 	public object $dostavka;
@@ -23,15 +21,14 @@ class OrderData
 	public object $items;
 	public object $payments;
 	public object $analytics;
-	private $cardText;
-	private $customerId;
-	private $status;
-	private array $customFields;
+	public $cardText;
+	public $customerId;
+	public $status;
+	public array $customFields;
 
 	public function __construct($site)
 	{
 		$this->log = new Logger();
-		$this->setSite($site);
 		$this->poluchatel = new Poluchatel();
 		$this->zakazchik = new Zakazchik();
 		$this->items = new Items($site);
@@ -43,6 +40,7 @@ class OrderData
 		$this->analytics = new Analytics();
 		$this->status = 'new';
 		$this->customFields = [];
+		$this->customerId = '';
 	}
 	public function fromTilda(array $orderFromTilda)
 	{
@@ -52,10 +50,10 @@ class OrderData
 		// заказчик		
 		$this->zakazchik->setName($orderFromTilda['name-zakazchika']);
 		$this->zakazchik->setPhone($orderFromTilda['phone-zakazchika']);
-		$this->zakazchik->setMesenger($orderFromTilda['messenger-zakazchika']);
-		$this->zakazchik->znaetAdres($orderFromTilda['uznat-adres-u-poluchatelya']);
-		if ($orderFromTilda['onanim']) $this->zakazchik->onanim();
-		if ($this->zakazchik->phone == $this->poluchatel->phone) $this->zakazchik->poluchatel();
+		$this->zakazchik->setTelegram($orderFromTilda['messenger-zakazchika']);
+		if ($orderFromTilda['uznat-adres-u-poluchatelya']) $this->zakazchik->znaetAdres(false);
+		if ($orderFromTilda['onanim']) $this->zakazchik->onanim(true);
+		if ($this->zakazchik->phone == $this->poluchatel->phone) $this->zakazchik->poluchatel(true);
 		//товары		
 		$this->items->fromTilda($orderFromTilda['payment']['products']);
 		$this->addCustomField('bukety_v_zakaze', $this->items->getBukets());
@@ -74,12 +72,11 @@ class OrderData
 		$this->dostavka->setDate($orderFromTilda['dostavka-date']);
 		$this->dostavka->setInterval($orderFromTilda['dostavka-interval']);
 		$this->dostavka->setCost($orderFromTilda['dostavka-price']);
+		$this->dostavka->setCode($orderFromTilda['dostavka-code']);
 		$this->dostavka->setAuto($this->items);
 		//комменты		
-		$this->comments->setFlorist($orderFromTilda['florist-comment']);
-		$this->comments->setCourier($orderFromTilda['courier-comment']);
-		//дополнительные поля
-		$this->cardText = $orderFromTilda['text-v-kartochku'];
+		$this->comments->setFlorist(urldecode($orderFromTilda['florist-comment']));
+		$this->comments->setCourier(urldecode($orderFromTilda['courier-comment']));
 		//аналитика		
 		$this->analytics->setOtkudaUznal($orderFromTilda['otkuda-uznal-o-nas']);
 		$this->analytics->setUtmSource($orderFromTilda['utm_source']);
@@ -88,14 +85,17 @@ class OrderData
 		$this->analytics->setUtmContent($orderFromTilda['utm_content']);
 		$this->analytics->setUtmTerm($orderFromTilda['utm_term']);
 		$this->analytics->setYandexClientId($orderFromTilda['ya-client-id']);
+		//другое
+		$this->customerId = $orderFromTilda['customerId'];
+		$this->cardText = urldecode($orderFromTilda['text-v-kartochku']);
+		$this->isCastrated();
 	}
 	public function getCrm($readyToApi = true)
 	{
 		$order = [
-			'externalId' => 'php_' . time(),
+			'externalId' => 'php_' . time() . uniqid(),
 			'orderMethod' => 'php',
 			'status' => $this->status,
-			'customer' => ['id' => $this->customerId],
 			'firstName' => $this->zakazchik->firstName,
 			'lastName' => $this->zakazchik->lastName,
 			'patronymic' => $this->zakazchik->patronymic,
@@ -103,6 +103,7 @@ class OrderData
 			'customerComment' => $this->comments->courier,
 			'managerComment' => $this->comments->florist,
 			'delivery' => [
+				'code' => $this->dostavka->code,
 				'address' => [
 					'text' => $this->dostavka->getAdresText()
 				],
@@ -118,15 +119,15 @@ class OrderData
 			'customFields' => [
 				'card' => $this->items->getCards(),
 				'text_v_kartochku' => $this->cardText,
-				'onanim' => $this->zakazchik->isOnanim(),
+				'onanim' => $this->zakazchik->onanim,
 				'name_poluchatelya' => $this->poluchatel->name,
 				'bukety_v_zakaze' => $this->items->getBukets(),
 				'phone_poluchatelya' => $this->poluchatel->phone,
+				'messenger_zakazchika' => $this->zakazchik->telegram,
 				'otkuda_o_nas_uznal' => $this->analytics->otkudaUznal,
-				'messenger-zakazchika' => $this->zakazchik->telegram,
 				'stoimost_dostavki_iz_tildy' => $this->dostavka->cost,
 				'adres_poluchatelya' => $this->dostavka->getAdresText(),
-				'zakazchil_poluchatel' => $this->zakazchik->isPoluchatel(),
+				'zakazchil_poluchatel' => $this->zakazchik->poluchatel,
 				'ya_client_id_order' => $this->analytics->yandex['clientId']
 			],
 			'source' => [
@@ -137,31 +138,16 @@ class OrderData
 				'campaign' => $this->analytics->utm['campaign']
 			]
 		];
+		if ($this->customerId) {
+			$order['customer'] = [
+				'id' => $this->customerId
+			];
+		}
 		foreach ($this->customFields as $key => $value) {
 			$order['customFields'][$key] = $value;
 		}
 		if (!$readyToApi) return $order;
 		return json_encode($order);
-	}
-	public function getSite()
-	{
-		return $this->site;
-	}
-	public function setSite($data)
-	{
-		try {
-			$this->log->push('site', $data);
-			if (!in_array($data, allowed_sites())) {
-				throw new Exception('site "' . $data . '" is not allowed');
-			}
-			$this->site = $data;
-		} catch (Exception $e) {
-			$e->abort($this->log);
-		}
-	}
-	public function getCustomerId()
-	{
-		return $this->customerId;
 	}
 	public function setCustomerId($data)
 	{
@@ -178,5 +164,31 @@ class OrderData
 	public function addCustomField($key, $value)
 	{
 		$this->customFields[$key] = $value;
+	}
+	private function isCastrated()
+	{
+		if (!in_array($this->items->get()[0]->name, castrated_items())) return;
+		$this->status = 'complete';
+		//$this->comments->setFlorist('');
+		$this->comments->setCourier('');
+		$this->dostavka->setNetCost(0);
+		$this->dostavka->setCost(0);
+		$this->dostavka->setAuto(0);
+		$this->dostavka->setCity('');
+		$this->dostavka->setStreet('');
+		$this->dostavka->setBuilding('');
+		$this->dostavka->setHousing('');
+		$this->dostavka->setHouse('');
+		$this->dostavka->setFlat('');
+		$this->dostavka->setFloor('');
+		$this->dostavka->setBlock('');
+		$this->dostavka->setDomofon('');
+		$this->dostavka->setInterval('');
+		$this->poluchatel->setName('');
+		$this->poluchatel->setPhone('');
+		$this->zakazchik->setOnanim(false);
+		$this->zakazchik->znaetAdres(true);
+		$this->addCustomField('florist', 'boss');
+		$this->cardText = '';
 	}
 }

@@ -3,6 +3,7 @@
 namespace php2steblya;
 
 use php2steblya\OrderData_name as Name;
+use php2steblya\OrderData_zakazchik_telegram as Telegram;
 
 class OrderData_zakazchik
 {
@@ -11,14 +12,15 @@ class OrderData_zakazchik
 	public $patronymic;
 	public $telegram;
 	public $phone;
-	private bool $onanim;
-	private bool $poluchatel;
-	private bool $znaetAdres;
+	public bool $onanim;
+	public bool $poluchatel;
+	public bool $znaetAdres;
 
 	public function __construct()
 	{
 		$this->onanim = false;
 		$this->poluchatel = false;
+		$this->znaetAdres = true;
 	}
 	public function setName($data)
 	{
@@ -43,33 +45,21 @@ class OrderData_zakazchik
 	{
 		$this->phone = $data;
 	}
-	public function setMesenger($telegram)
+	public function setTelegram($data)
 	{
-		if (!preg_match('/^[A-Za-z0-9_.-]+$/', $telegram)) return;
-		$this->telegram = strtolower($telegram);
+		$telegram = new Telegram($data);
+		$this->telegram = $telegram->get();
 	}
-	public function onanim()
+	public function onanim(bool $data)
 	{
-		$this->onanim = true;
+		$this->onanim = $data;
 	}
-	public function poluchatel()
+	public function poluchatel(bool $data)
 	{
-		$this->poluchatel = true;
+		$this->poluchatel = $data;
 	}
-	public function znaetAdres($data = false)
+	public function znaetAdres(bool $data)
 	{
-		$this->znaetAdres = $data ? true : false;
-	}
-	public function isOnanim()
-	{
-		return $this->onanim;
-	}
-	public function isPoluchatel()
-	{
-		return $this->poluchatel;
-	}
-	public function isZnaetAdres()
-	{
-		return $this->znaetAdres;
+		$this->znaetAdres = $data;
 	}
 }

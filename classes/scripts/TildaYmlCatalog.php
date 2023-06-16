@@ -22,10 +22,15 @@ class TildaYmlCatalog
 
 	public function init()
 	{
+		$this->log = new Logger('tilda yml catalogs sync');
 		$urls = [
 			[
-				'site' => '2steblya',
+				'site' => $_ENV['site_2steblya_id'],
 				'url' => 'https://2steblya.ru/tstore/yml/81f7b18311537d636b0044cd46380d01.yml'
+			],
+			[
+				'site' => $_ENV['site_stf_id'],
+				'url' => 'https://staytrueflowers.ru/tstore/yml/738043006302c6389361eac93fc53c27.yml'
 			]
 			//'2steblya' => 'https://tilda.imb-service.ru/file/get/e51ac7a9e59a5d2b84a945de066810c7.yml'
 			//'Stay True flowers' => 'https://staytrueflowers.ru/tstore/yml/738043006302c6389361eac93fc53c27.yml'
@@ -39,7 +44,6 @@ class TildaYmlCatalog
 				'catalog.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaYmlCatalog_' . $this->site . '.txt',
 				'catalog_hash.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaYmlCatalog_' . $this->site . '_hash.txt'
 			];
-			$this->log = new Logger('tilda yml catalogs sync');
 			$this->log->insert($this->site);
 			if (!$this->isChanged()) continue;
 			$this->catalog = YML::ymlToArray($this->tildaYmlUrl);

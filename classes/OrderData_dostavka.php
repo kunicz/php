@@ -8,14 +8,14 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	public $interval;
 	public $cost;
 	public $netCost;
-	public $type;
+	public $code;
 	private bool $auto;
 	public function __construct()
 	{
 		$this->auto = false;
 		$this->cost = 500;
 		$this->netCost = 0;
-		$this->type = 'Доставка курьером';
+		$this->code = 'courier';
 	}
 	public function isAuto()
 	{
@@ -29,9 +29,9 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	{
 		$this->interval = $data;
 	}
-	public function setType($data)
+	public function setCode($data)
 	{
-		$this->type = $data;
+		$this->code = $data;
 	}
 	public function setCost($data)
 	{

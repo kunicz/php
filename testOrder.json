@@ -22,15 +22,12 @@
 	"otkuda-uznal-o-nas": "something new",
 	"ya-client-id": "1686567887390999999",
 	"payment": {
-		"sys": "yakassa",
-		"systranid": "2c191e5d-000f-5000-8000-192adda018fd",
 		"orderid": "1354789391",
 		"products": [
 			{
 				"name": "ЭТО ЛЕТО БУДЕТ ЛУТШИМ",
 				"quantity": "1",
 				"amount": "25000",
-				"externalid": "D1leJGEr0RBUn5dOV5yL#xEkTrzuy8xkoRaoNxTRe",
 				"price": "25000",
 				"sku": "069-25x",
 				"options": [
@@ -47,10 +44,33 @@
 						"variant": "25000"
 					}
 				]
+			},
+			{
+				"name": "ДОНАТОШНАЯ",
+				"quantity": "1",
+				"amount": "200",
+				"price": "200",
+				"sku": "888",
+				"options": [
+					{
+						"option": "скока не жалко",
+						"variant": "200 руб."
+					},
+					{
+						"option": "выебри карточку",
+						"variant": "со своим текстом"
+					},
+					{
+						"option": "цена",
+						"variant": "200"
+					}
+				]
 			}
 		],
-		"amount": "25000"
+		"amount": "25200"
 	},
 	"formid": "form461079073",
-	"formname": "Cart"
+	"formname": "Cart",
+	"date": "2023-06-14 18:31:23",
+	"payed": "1"
 }
