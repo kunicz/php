@@ -20,21 +20,13 @@ class ApiRetailCrmResponse
 		$this->source = $source;
 		$this->log->push('parent source', $this->source);
 	}
-	public function get()
-	{
-		$this->execute('get');
-	}
-	public function post()
-	{
-		$this->execute('post');
-	}
-	public function execute($getpost)
+	public function request($getpost)
 	{
 		$this->api = new Api();
 		$this->api->curl($getpost, $this->method, $this->args);
+		$this->log->push('method', $this->method);
 		$this->log->push('queryString', $this->args);
 		$this->log->push('response', $this->api->response);
-		$this->log->push('method', $this->method);
 		if ($this->api->hasErrors()) {
 			$this->log->pushError($this->api->getError());
 			$this->abort();

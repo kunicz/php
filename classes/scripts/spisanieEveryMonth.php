@@ -4,9 +4,9 @@ namespace php2steblya\scripts;
 
 use php2steblya\Logger;
 use php2steblya\OrderData;
-use php2steblya\ApiRetailCrmResponse_orders_get as Order_get;
-use php2steblya\ApiRetailCrmResponse_orders_edit as Order_edit;
-use php2steblya\ApiRetailCrmResponse_orders_create as Order_create;
+use php2steblya\ApiRetailCrmResponse_orders_get as Orders_get;
+use php2steblya\ApiRetailCrmResponse_orders_edit as Orders_edit;
+use php2steblya\ApiRetailCrmResponse_orders_create as Orders_create;
 
 /*
 	помечаем списание за прошедший месяц как "выполнено"
@@ -44,7 +44,7 @@ class SpisanieEveryMonth
 				'createdAtTo' => $createdAtTo
 			]
 		];
-		$orderOld = new Order_get($this->source, $args);
+		$orderOld = new Orders_get($this->source, $args);
 		$this->log->push('1. get old spisanie', $orderOld->getLog());
 		/**
 		 * обновляем статус
@@ -54,7 +54,7 @@ class SpisanieEveryMonth
 			'site' => $_ENV['site_ostatki_id'],
 			'order' => json_encode(['status' => 'complete'])
 		];
-		$orderOld = new Order_edit($this->source, $args, $orderOld->getOrdersIds()[0]);
+		$orderOld = new Orders_edit($this->source, $args, $orderOld->getIds()[0]);
 		$this->log->push('2. edit old spisanie', $orderOld->getLog());
 	}
 	private function spisanieNew()
@@ -72,7 +72,7 @@ class SpisanieEveryMonth
 			'site' => $_ENV['site_ostatki_id'],
 			'order' => $orderData->getCrm()
 		];
-		$orderNew = new Order_create($this->source, $args);
+		$orderNew = new Orders_create($this->source, $args);
 		$this->log->push('3. create new spisanie', $orderNew->getLog());
 		$this->log->setRemark($orderNew->getRemark());
 	}

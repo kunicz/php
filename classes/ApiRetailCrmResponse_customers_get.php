@@ -14,7 +14,7 @@ class ApiRetailCrmResponse_customers_get extends ApiRetailCrmResponse
 		parent::__construct($source);
 		$this->method = 'customers';
 		$this->args = $args;
-		$this->get();
+		$this->request('get');
 		if (!$this->api->getCount()) {
 			$this->log->pushNote('no customers found' . ($name ? '(' . $name . ')' : ''));
 		}
@@ -22,15 +22,15 @@ class ApiRetailCrmResponse_customers_get extends ApiRetailCrmResponse
 			$this->customersIds[] = $customer->id;
 		}
 	}
-	public function hasCustomers()
+	public function has()
 	{
 		return $this->api->getCount() ? true : false;
 	}
-	public function getCustomers()
+	public function get()
 	{
 		return $this->api->response->customers;
 	}
-	public function getCustomersIds(): array
+	public function getIds(): array
 	{
 		return $this->customersIds;
 	}

@@ -14,7 +14,7 @@ class ApiRetailCrmResponse_customers_edit extends ApiRetailCrmResponse
 		$this->log->push('customerName', $name);
 		$this->method = 'customers/' . $customerId . '/edit';
 		$this->args = $args;
-		$this->post();
+		$this->request('post');
 	}
 	public function getRemark()
 	{

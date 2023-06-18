@@ -4,8 +4,8 @@ namespace php2steblya\scripts;
 
 use php2steblya\Logger;
 use php2steblya\OrderData_zakazchik_telegram as Telegram;
-use php2steblya\ApiRetailCrmResponse_orders_get as Orders;
-use php2steblya\ApiRetailCrmResponse_customers_edit as Customer;
+use php2steblya\ApiRetailCrmResponse_orders_get as Orders_get;
+use php2steblya\ApiRetailCrmResponse_customers_edit as Customers_edit;
 
 class UpdateYesterdayCustomers
 {
@@ -22,13 +22,10 @@ class UpdateYesterdayCustomers
 	 */
 	public function init(): void
 	{
-		$this->source = 'clear yesterday customer\'s adreses';
+		$this->source = 'update yesterday customers';
 		$this->log = new Logger($this->source);
 		$this->collectOrders();
-		if (empty($this->orders)) {
-			$this->log->pushNote('orders not found');
-			return;
-		}
+		if (!$this->orders->has()) return;
 		$this->clearAdreses();
 		$this->log->writeSummary();
 	}
@@ -47,9 +44,9 @@ class UpdateYesterdayCustomers
 				'createdAtTo' => $yesterday
 			]
 		];
-		$orders = new Orders($this->source, $args);
-		$this->orders = $orders->getOrders();
-		$this->log->push('1. orders', $orders->getLog());
+		$orders = new Orders_get($this->source, $args);
+		$this->orders = $orders;
+		$this->log->push('1. collect orders', $orders->getLog());
 	}
 	/**
 	 * очищаем адреса, переписываем телеграм, ya_client_id
@@ -61,7 +58,7 @@ class UpdateYesterdayCustomers
 	{
 		$this->log->insert('2. edited customers');
 		$customersIds = [];
-		foreach ($this->orders as $order) {
+		foreach ($this->orders->get() as $order) {
 			$name = new Name($order->customer->firstName, $order->customer->lastName, $order->customer->patronymic);
 			$telegram = new Telegram($order->customFields->messenger_zakazchika);
 			$customerId = $order->customer->id;
@@ -82,7 +79,7 @@ class UpdateYesterdayCustomers
 				'site' => $order->site,
 				'customer' => json_encode($customerData)
 			];
-			$customer = new Customer($this->source, $args, $customerId, $name->getName());
+			$customer = new Customers_edit($this->source, $args, $customerId, $name->getName());
 			$this->log->push($customerId, $customer->getLog());
 			$customersIds[] = $customerId;
 		}

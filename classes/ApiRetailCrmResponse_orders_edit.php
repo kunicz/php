@@ -13,7 +13,7 @@ class ApiRetailCrmResponse_orders_edit extends ApiRetailCrmResponse
 		$this->log->push('orderData', json_decode($args['order'], true));
 		$this->method = 'orders/' . $orderId . '/edit';
 		$this->args = $args;
-		$this->post();
+		$this->request('post');
 	}
 	public function getRemark()
 	{

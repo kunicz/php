@@ -6,8 +6,8 @@ class ApiRetailCrm extends Api
 {
 	public function __construct()
 	{
-		$this->adres = $_ENV['API_SITE'];
-		$this->token = $_ENV['API_TOKEN'];
+		$this->token = $_ENV['API_RETAILCRM_TOKEN'];
+		$this->adres = $_ENV['API_RETAILCRM_SITE'];
 	}
 	public function getCount()
 	{
@@ -24,7 +24,6 @@ class ApiRetailCrm extends Api
 	public function getError()
 	{
 		$error = $this->response->errorMsg;
-		//if ($this->response->errors) $error .= ' (' . str_replace('=', ': ', str_replace('+', ' ', http_build_query($this->response->errors, '', '+'))) . ')';
 		return $error;
 	}
 	public function hasErrors()

@@ -27,6 +27,18 @@ class File
 		fwrite($this->file, "\r\n" . $text);
 		fclose($this->file);
 	}
+	public static function collect(string $filePath, $data)
+	{
+		$file = new self($filePath);
+		$items = $file->getContents();
+		if ($items) {
+			$items = json_decode($items, true);
+		} else {
+			$items = [];
+		}
+		$items[] = $data;
+		$file->write(json_encode($items));
+	}
 	public function getContents()
 	{
 		return $this->text;

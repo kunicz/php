@@ -14,7 +14,7 @@ class ApiRetailCrmResponse_orders_get extends ApiRetailCrmResponse
 		parent::__construct($source);
 		$this->method = 'orders';
 		$this->args = $args;
-		$this->get();
+		$this->request('get');
 		if (!$this->api->getCount()) {
 			$this->log->pushNote('no orders found');
 		}
@@ -22,11 +22,15 @@ class ApiRetailCrmResponse_orders_get extends ApiRetailCrmResponse
 			$this->ordersIds[] = $order->id;
 		}
 	}
-	public function getOrders()
+	public function has()
+	{
+		return $this->api->getCount() ? true : false;
+	}
+	public function get()
 	{
 		return $this->api->response->orders;
 	}
-	public function getOrdersIds(): array
+	public function getIds(): array
 	{
 		return $this->ordersIds;
 	}

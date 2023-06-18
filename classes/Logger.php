@@ -63,7 +63,7 @@ class Logger
 	 */
 	public function pushNote($note)
 	{
-		$this->contents[$this->contentsKey]['notes'][] = $note;
+		$this->contents['notes'][] = $note;
 	}
 	/**
 	 * contents
@@ -99,8 +99,8 @@ class Logger
 		$log = [
 			'source' => $this->source,
 			'errors' => $this->errors,
-			'remark' => $this->summaryRemark
 		];
+		if ($this->summaryRemark) $log['remark'] = $this->summaryRemark;
 		foreach ($this->contents as $key => $value) {
 			$log[$key] = $value;
 		}

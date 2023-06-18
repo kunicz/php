@@ -8,7 +8,7 @@ if (isset($_GET['script'])) {
 		switch ($className) {
 			case 'TildaOrderWebhook':
 				http_response_code(200);
-				if (isset($_GET['site'])) $scriptInstance = new $class($_GET['site'], isset($_GET['payed']) ? true : false);
+				if (isset($_GET['site'])) $scriptInstance = new $class($_GET['site'], isset($_GET['payed']) ? true : false, isset($_GET['testMode']) ? true : false); //site, payed, testMode
 				break;
 			default:
 				$scriptInstance = new $class();

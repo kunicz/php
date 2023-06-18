@@ -14,16 +14,6 @@ class Api
 	protected $adres;
 	protected $token;
 
-	public function get(string $method, array $args)
-	{
-		$this->curl('get', $method, $args);
-		return $this->response;
-	}
-	public function post(string $method, array $args)
-	{
-		$this->curl('post', $method, $args);
-		return $this->response;
-	}
 	public function curl(string $type, string $method, array $args)
 	{
 		$this->queryString($method, $args);
