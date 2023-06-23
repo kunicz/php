@@ -21,15 +21,16 @@ class TildaOrderWebhook
 
 	public function __construct(string $site, bool $payed = false, bool $testMode = false)
 	{
+		if (!in_array($site, allowed_sites())) die('site ' . $site . ' is not allowed');
 		$this->site = $site;
 		$this->payed = $payed;
 		$this->source = 'tilda orders webhook';
 		$this->log = new Logger($this->source);
 		$this->filePaths = [
 			'orderTest.json' => dirname(dirname(dirname(__FILE__))) . '/testOrder.json',
-			'orders.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrders_' . $site . '.txt',
-			'orderLast.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrderLast_' . $site . '.txt',
-			'notPayed.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_' . $site . '.txt',
+			'orders.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrders_' . $this->site . '.txt',
+			'orderLast.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrderLast_' . $this->site . '.txt',
+			'notPayed.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_' . $this->site . '.txt',
 		];
 		if ($testMode) {
 			$testOrderFile = new File($this->filePaths['orderTest.json']);
@@ -43,13 +44,13 @@ class TildaOrderWebhook
 		$this->postData['payed'] = $this->payed;
 		$this->postData['date'] = date('Y-m-d H:i:s');
 		$this->log->push('postData', $this->postData);
-		$this->orderLastToFile();
-		$this->appendOrderToFile();
 	}
 	public function init()
 	{
 		if (!$this->isOrderReal()) return;
 		$this->isOrderPayed() ? $this->orderPayed() : $this->orderUnpayed();
+		$this->orderLastToFile();
+		$this->appendOrderToFile();
 		$this->log->writeSummary();
 	}
 	private function isOrderReal(): bool
@@ -81,7 +82,7 @@ class TildaOrderWebhook
 		/**
 		 * если заказ не оплачен, заносим его postData в массив и сохраняем в файле
 		 * cron в скрипте TildaNotPayedNotify.php раз в полчаса открывает файл и пробегается по массиву
-		 * если заказ уже старше получаса - отправляет сообщение в канал 
+		 * если заказ уже старше получаса - отправляет сообщение в соответствующий канал и удаляет запись из файла
 		 */
 		File::collect($this->filePaths['notPayed.txt'], $this->postData);
 		$remark = 'recieved order (tilda: ' . $this->postData['payment']['orderid'] . ') | ' . $this->site;

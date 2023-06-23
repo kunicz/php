@@ -36,12 +36,11 @@ class UpdateYesterdayCustomers
 	 */
 	public function collectOrders(): void
 	{
-		$yesterday = date('Y-m-d', strtotime('-1 day'));
 		$args = [
 			'limit' => 100,
 			'filter' => [
-				'createdAtFrom' => $yesterday,
-				'createdAtTo' => $yesterday
+				'createdAtFrom' => date('Y-m-d', strtotime('-8 day')),
+				'createdAtTo' => date('Y-m-d', strtotime('-1 day'))
 			]
 		];
 		$orders = new Orders_get($this->source, $args);

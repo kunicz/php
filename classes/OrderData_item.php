@@ -24,7 +24,7 @@ class OrderData_item
 		$this->setScu($productFromTilda['sku']);
 		$this->initialPrice = (int) $productFromTilda['price'];
 		$this->transportPrice = (int) $productFromTilda['price'];
-		$this->purchasePrice = (int) $productFromTilda['price'];
+		$this->purchasePrice = 0;
 		$this->quantity = (int) $productFromTilda['quantity'];
 		$this->properties = $productFromTilda['options'];
 	}
@@ -63,11 +63,11 @@ class OrderData_item
 	{
 		$props = [];
 		if (empty($this->properties)) return $props;
-		foreach ($this->properties as $option) {
-			if (in_array($option['option'], ['выебри карточку', 'выбери карточку']) && in_array($this->name, castrated_items())) continue; //не публикуем карточку для
+		foreach ($this->properties as $prop) {
+			if (in_array($prop['option'], ['выебри карточку', 'выбери карточку']) && in_array($this->name, castrated_items())) continue; //не публикуем карточку для кастратов
 			$props[] = [
-				'name' => $option['option'],
-				'value' => preg_replace('/\s*\([^)]+\)/', '', $option['variant']) //удаляем все, что в скобках
+				'name' => str_replace('?', '', $prop['option']), //удаляем ? в названиях опций (скока? какой цвет?)
+				'value' => preg_replace('/\s*\([^)]+\)/', '', $prop['variant']) //удаляем все, что в скобках
 			];
 		}
 		if ($this->sku->get()) {

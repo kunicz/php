@@ -7,7 +7,7 @@ use php2steblya\Logger;
 class ApiRetailCrmResponse_products_get extends ApiRetailCrmResponse
 {
 	private array $ids;
-	private $names;
+	private array $names;
 
 	public function __construct($source, array $args)
 	{

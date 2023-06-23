@@ -10,12 +10,16 @@ class OrderData_analytics
 
 	public function __construct()
 	{
-		$this->yandex['clientId'] = '';
-		$this->utm['source'] = '';
-		$this->utm['medium'] = '';
-		$this->utm['campaign'] = '';
-		$this->utm['content'] = '';
-		$this->utm['term'] = '';
+		$this->yandex = [
+			'clientId' => ''
+		];
+		$this->utm = [
+			'source' => '',
+			'medium' => '',
+			'campaign' => '',
+			'content' => '',
+			'term' => ''
+		];
 	}
 	public function setOtkudaUznal($data)
 	{

@@ -35,6 +35,9 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	}
 	public function setCost($data)
 	{
+		if (strlen($data) > 4) {
+			$data = 500;
+		}
 		$this->cost = $data;
 	}
 	public function setNetCost($data)
@@ -46,7 +49,7 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 		$autoFormats = ['коробка', 'корзинка', 'корзина', 'букет-гигант', 'корзинища'];
 		foreach ($items as $item) {
 			foreach ($item->properties as $option) {
-				if (str_replace(' ', '', $option['option']) != 'формат') continue;
+				if (in_array($option['option'], ['фор мат', 'Размер'])) continue;
 				if (!in_array($option['variant'], $autoFormats)) break;
 				$this->auto = true;
 				return;

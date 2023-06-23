@@ -16,6 +16,16 @@ class OrderData_items
 		$this->site = $site;
 		$this->items = [];
 	}
+	public function fromTilda(array $productsFromTilda)
+	{
+		foreach ($productsFromTilda as $item) {
+			$item = new Item($this->site, $item);
+			$this->items[] = $item;
+			$this->pushBuket($item);
+			$this->pushCard($item);
+		}
+		$this->pushTransportItem();
+	}
 	public function pushTransportItem()
 	{
 		/**
@@ -38,16 +48,6 @@ class OrderData_items
 				break;
 		}
 		$this->items[] = $item;
-	}
-	public function fromTilda(array $productsFromTilda)
-	{
-		foreach ($productsFromTilda as $item) {
-			$item = new Item($this->site, $item);
-			$this->items[] = $item;
-			$this->pushBuket($item);
-			$this->pushCard($item);
-		}
-		$this->pushTransportItem();
 	}
 	public function get()
 	{
@@ -79,22 +79,22 @@ class OrderData_items
 	private function pushBuket($item)
 	{
 		if (empty($item->properties)) return;
-		//name
+		//название
 		$buket = $item->name;
-		//format
+		//формат
 		foreach ($item->properties as $option) {
-			if (str_replace(' ', '', $option['option']) != 'формат') continue;
+			if (!in_array($option['option'], ['фор мат', 'Размер'])) continue;
 			$buket .= ' - ' . $option['variant'];
 			break;
 		}
-		//additional props
+		//свойства
 		$dops = [];
 		foreach ($item->properties as $option) {
-			if (in_array($option['option'], ['артикул', 'цена', 'выебри карточку', 'выбери карточку', 'фор мат', 'формат'])) continue;
-			$dops[] = str_replace('?', '', $option['option']) . ': ' . $option['variant'];
+			if (in_array($option['option'], ['артикул', 'цена', 'выебри карточку', 'выбери карточку', 'фор мат', 'Размер'])) continue;
+			$dops[] = $option['option'] . ': ' . $option['variant'];
 		}
 		if (!empty($dops)) $buket .= ' (' . implode(', ', $dops) . ')';
-		//quantity
+		//количество
 		$buket .= ' (' . $item->quantity . ' шт)';
 		$this->bukets[] = $buket;
 	}

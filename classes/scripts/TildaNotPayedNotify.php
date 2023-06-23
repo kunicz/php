@@ -16,13 +16,9 @@ class TildaNotPayedNotify
 		$this->source = 'unpayed order notify';
 		$this->log = new Logger($this->source);
 		$now = time();
-		$filesPaths = [
-			'2steblya' => dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_2steblya.txt',
-			'staytrueflowers' => dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_staytrueflowers.txt'
-		];
-		foreach ($filesPaths as $site => $path) {
+		foreach (allowed_sites() as $site) {
 			$this->log->insert($site);
-			$file = new File($path);
+			$file = new File(dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_' . $site . '.txt');
 			$orders = json_decode($file->getContents(), true);
 			if (empty($orders)) continue;
 			for ($i = 0; $i < count($orders); $i++) {
@@ -40,6 +36,7 @@ class TildaNotPayedNotify
 				$this->log->push($orders[$i]['payment']['orderId'], $orderLog);
 				unset($orders[$i]);
 			}
+			$orders = array_values($orders);
 			$file->write(json_encode($orders));
 		}
 	}

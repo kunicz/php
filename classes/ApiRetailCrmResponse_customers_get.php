@@ -16,7 +16,7 @@ class ApiRetailCrmResponse_customers_get extends ApiRetailCrmResponse
 		$this->args = $args;
 		$this->request('get');
 		if (!$this->api->getCount()) {
-			$this->log->pushNote('no customers found' . ($name ? '(' . $name . ')' : ''));
+			$this->log->pushNote('no customers found' . ($name ? ' (' . $name . ')' : ''));
 		}
 		foreach ($this->api->response->customers as $customer) {
 			$this->customersIds[] = $customer->id;

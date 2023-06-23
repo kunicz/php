@@ -14,6 +14,14 @@ class Api
 	protected $adres;
 	protected $token;
 
+	public function get(string $method, array $args)
+	{
+		$this->curl('get', $method, $args);
+	}
+	public function post(string $method, array $args)
+	{
+		$this->curl('post', $method, $args);
+	}
 	public function curl(string $type, string $method, array $args)
 	{
 		$this->queryString($method, $args);
@@ -36,9 +44,9 @@ class Api
 		}
 		try {
 			$response = curl_exec($ch);
-			if (!$response) throw new \Exception('api (' . $type . ' ' . $method . ') returned null');
+			if (!$response) throw new Exception('api (' . $type . ' ' . $method . ') returned null');
 			$this->response = json_decode($response);
-			if (!$this->response) throw new \Exception('api (' . $type . ' ' . $method . ') returned with error -> ' . $response);
+			if (!$this->response) throw new Exception('api (' . $type . ' ' . $method . ') returned with error -> ' . $response);
 		} catch (Exception $e) {
 			$log = new Logger('api curl');
 			$e->abort($log);
@@ -50,10 +58,6 @@ class Api
 		$this->queryStringAdres = $this->adres . '/' . $method;
 		$this->queryStringArgs = http_build_query($args);
 		$this->queryString = $this->queryStringAdres . '?apiKey=' . $this->token . '&' . $this->queryStringArgs;
-	}
-	public function getQueryStringArgs(): string
-	{
-		return $this->queryStringArgs;
 	}
 	public function getError()
 	{

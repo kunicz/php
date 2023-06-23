@@ -15,13 +15,7 @@ if (isset($args['script'])) {
 	$className = $args['script'];
 	$class = 'php2steblya\\scripts\\' . $className;
 	if (class_exists($class)) {
-		switch ($className) {
-			case 'TildaOrderWebhook':
-				$scriptInstance = new $class($args['site']);
-				break;
-			default:
-				$scriptInstance = new $class();
-		}
+		$scriptInstance = new $class();
 		$scriptInstance->init();
 		die($scriptInstance->log->getJson());
 	} else {
