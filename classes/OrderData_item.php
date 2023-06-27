@@ -66,7 +66,7 @@ class OrderData_item
 		foreach ($this->properties as $prop) {
 			if (in_array($prop['option'], ['выебри карточку', 'выбери карточку']) && in_array($this->name, castrated_items())) continue; //не публикуем карточку для кастратов
 			$props[] = [
-				'name' => str_replace('?', '', $prop['option']), //удаляем ? в названиях опций (скока? какой цвет?)
+				'name' => str_replace('?', '', htmlspecialchars_decode($prop['option'])), //удаляем ? в названиях опций (скока? какой цвет?)
 				'value' => preg_replace('/\s*\([^)]+\)/', '', $prop['variant']) //удаляем все, что в скобках
 			];
 		}

@@ -93,7 +93,7 @@ class TelegramBot
 		$message[] = '⏱ <b>Время заказа:</b> ' . date('d.m.Y H:i', strtotime($this->postData['date']));
 		$message[] = $this->payed ? '✅ Оплачен' : '⛔️ Не оплачен';
 		foreach ($this->orderData->analytics->utm as $key => $value) {
-			if ($value) $message[] = '↩️ <b>utm-' . $key . ':</b> ' + $value;
+			if ($value) $message[] = '<b>utm-' . $key . ':</b> ' . $value;
 		}
 		$this->message = implode("\r\n", $message);
 	}

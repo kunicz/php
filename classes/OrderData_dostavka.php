@@ -10,16 +10,13 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	public $netCost;
 	public $code;
 	private bool $auto;
+
 	public function __construct()
 	{
 		$this->auto = false;
 		$this->cost = 500;
 		$this->netCost = 0;
 		$this->code = 'courier';
-	}
-	public function isAuto()
-	{
-		return $this->auto;
 	}
 	public function setDate($data)
 	{
@@ -35,9 +32,7 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	}
 	public function setCost($data)
 	{
-		if (strlen($data) > 4) {
-			$data = 500;
-		}
+		if (strlen($data) > 4) $data = 500;
 		$this->cost = $data;
 	}
 	public function setNetCost($data)
@@ -55,5 +50,9 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 				return;
 			}
 		}
+	}
+	public function isAuto()
+	{
+		return $this->auto;
 	}
 }

@@ -76,7 +76,7 @@ class OrderData
 		$this->dostavka->setAuto($this->items);
 		//комменты		
 		$this->comments->setFlorist(urldecode($orderFromTilda['florist-comment']));
-		$this->comments->setCourier(urldecode($orderFromTilda['courier-comment']));
+		$this->comments->setCourier(($this->dostavka->domofon ? 'Код домофона: ' . $this->dostavka->domofon . "\r\n" : '') . urldecode($orderFromTilda['courier-comment']));
 		//аналитика		
 		$this->analytics->setOtkudaUznal($orderFromTilda['otkuda-uznal-o-nas']);
 		$this->analytics->setUtmSource($orderFromTilda['utm_source']);
@@ -128,7 +128,8 @@ class OrderData
 				'stoimost_dostavki_iz_tildy' => $this->dostavka->cost,
 				'adres_poluchatelya' => $this->dostavka->getAdresText(),
 				'zakazchil_poluchatel' => $this->zakazchik->poluchatel,
-				'ya_client_id_order' => $this->analytics->yandex['clientId']
+				'ya_client_id_order' => $this->analytics->yandex['clientId'],
+				'uznat_adres_u_poluchatelya' => !$this->zakazchik->znaetAdres
 			],
 			'source' => [
 				'keyword' => $this->analytics->utm['term'],
@@ -173,7 +174,6 @@ class OrderData
 		$this->comments->setCourier('');
 		$this->dostavka->setNetCost(0);
 		$this->dostavka->setCost(0);
-		$this->dostavka->setAuto(0);
 		$this->dostavka->setCity('');
 		$this->dostavka->setStreet('');
 		$this->dostavka->setBuilding('');
@@ -186,7 +186,7 @@ class OrderData
 		$this->dostavka->setInterval('');
 		$this->poluchatel->setName('');
 		$this->poluchatel->setPhone('');
-		$this->zakazchik->setOnanim(false);
+		$this->zakazchik->onanim(false);
 		$this->zakazchik->znaetAdres(true);
 		$this->addCustomField('florist', 'boss');
 		$this->cardText = '';

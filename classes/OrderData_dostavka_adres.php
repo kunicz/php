@@ -4,16 +4,16 @@ namespace php2steblya;
 
 class OrderData_dostavka_adres
 {
-	private $region; //регион
-	private $city; //город
-	private $street; //улица
-	private $building; //дом
-	private $housing; //корпус
-	private $house; //строение
-	private $flat; //квартира
-	private $floor; //этаж
-	private $block; //подъезд
-	private $domofon; //домофон
+	public $region; //регион
+	public $city; //город
+	public $street; //улица
+	public $building; //дом
+	public $housing; //корпус
+	public $house; //строение
+	public $flat; //квартира
+	public $floor; //этаж
+	public $block; //подъезд
+	public $domofon; //домофон
 
 	public function getAdresText()
 	{
