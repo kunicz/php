@@ -72,11 +72,14 @@ class OrderData
 		$this->dostavka->setDate($orderFromTilda['dostavka-date']);
 		$this->dostavka->setInterval($orderFromTilda['dostavka-interval']);
 		$this->dostavka->setCost($orderFromTilda['dostavka-price']);
-		$this->dostavka->setCode($orderFromTilda['dostavka-code']);
+		$this->dostavka->setCode('courier');
 		$this->dostavka->setAuto($this->items);
 		//комменты		
 		$this->comments->setFlorist(urldecode($orderFromTilda['florist-comment']));
-		$this->comments->setCourier(($this->dostavka->domofon ? 'Код домофона: ' . $this->dostavka->domofon . "\r\n" : '') . urldecode($orderFromTilda['courier-comment']));
+		$courierComment = [];
+		if ($this->dostavka->domofon) $courierComment[] = 'Код домофона: ' . $this->dostavka->domofon;
+		if ($orderFromTilda['courier-comment']) $courierComment[] = urldecode($orderFromTilda['courier-comment']);
+		$this->comments->setCourier(implode("\r\n", $courierComment));
 		//аналитика		
 		$this->analytics->setOtkudaUznal($orderFromTilda['otkuda-uznal-o-nas']);
 		$this->analytics->setUtmSource($orderFromTilda['utm_source']);

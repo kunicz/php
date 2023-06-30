@@ -13,7 +13,7 @@ class OrderData_payment
 	public function __construct($paymentFromTilda = null)
 	{
 		if (!$paymentFromTilda) return;
-		$this->externalId = $paymentFromTilda['systranid'];
+		if (isset($paymentFromTilda['systranid'])) $this->externalId = $paymentFromTilda['systranid'];
 		$this->amount = $paymentFromTilda['amount'];
 		$this->paidAt = date('Y-m-d H:i:s');
 		$this->type = 'site';

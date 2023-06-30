@@ -21,22 +21,25 @@ class TildaNotPayedNotify
 			$file = new File(dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_' . $site . '.txt');
 			$orders = json_decode($file->getContents(), true);
 			if (empty($orders)) continue;
-			for ($i = 0; $i < count($orders); $i++) {
-				$orderTime = strtotime($orders[$i]['date']);
+			$ordersToDelete = [];
+			foreach ($orders as $key => $order) {
+				$orderTime = strtotime($order['date']);
 				$orderLog = [
 					'time' => [
 						'now' => $now,
 						'order' => $orderTime
 					],
-					'postData' => $orders[$i]['orderData']
+					'postData' => $order['orderData']
 				];
 				if ($orderTime > $now - (30 * 60)) continue; // если заказ записан менее чем полчаса назад
-				$telegramBot = new TelegramBot($orders[$i]);
+				$telegramBot = new TelegramBot($order);
 				$orderLog['telegram'] = $telegramBot->getLog();
-				$this->log->push($orders[$i]['payment']['orderId'], $orderLog);
-				unset($orders[$i]);
+				$this->log->push($order['payment']['orderId'], $orderLog);
+				$ordersToDelete[] = $key;
 			}
-			$orders = array_values($orders);
+			foreach ($ordersToDelete as $key) {
+				unset($orders[$key]);
+			}
 			$file->write(json_encode($orders));
 		}
 	}
