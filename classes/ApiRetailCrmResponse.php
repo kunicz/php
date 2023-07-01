@@ -7,8 +7,8 @@ use php2steblya\ApiRetailCrm as Api;
 
 class ApiRetailCrmResponse
 {
-	protected $log;
-	protected $api;
+	public $log;
+	public $api;
 	protected $args;
 	protected $site;
 	protected $method;

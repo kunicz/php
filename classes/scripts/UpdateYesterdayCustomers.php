@@ -2,6 +2,7 @@
 
 namespace php2steblya\scripts;
 
+use php2steblya\Name;
 use php2steblya\Logger;
 use php2steblya\OrderData_zakazchik_telegram as Telegram;
 use php2steblya\ApiRetailCrmResponse_orders_get as Orders_get;
@@ -83,22 +84,5 @@ class UpdateYesterdayCustomers
 			$customersIds[] = $customerId;
 		}
 		$this->log->setRemark(implode(',', $customersIds));
-	}
-}
-
-class Name
-{
-	private $name;
-
-	public function __construct($firstName, $lastName, $patronymic)
-	{
-		$this->name = '';
-		if ($lastName) $this->name .= $$lastName;
-		if ($firstName) $this->name .= ' ' . $firstName;
-		if ($patronymic) $this->name .= ' ' . $patronymic;
-	}
-	public function getName()
-	{
-		return trim($this->name);
 	}
 }

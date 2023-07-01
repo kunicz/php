@@ -23,6 +23,7 @@ class OrderData
 	public object $analytics;
 	public $cardText;
 	public $customerId;
+	public $promocode;
 	public $status;
 	public array $customFields;
 
@@ -41,6 +42,7 @@ class OrderData
 		$this->status = 'new';
 		$this->customFields = [];
 		$this->customerId = '';
+		$this->promocode = '';
 	}
 	public function fromTilda(array $orderFromTilda)
 	{
@@ -91,6 +93,7 @@ class OrderData
 		//другое
 		$this->customerId = $orderFromTilda['customerId'];
 		$this->cardText = urldecode($orderFromTilda['text-v-kartochku']);
+		$this->promocode = $orderFromTilda['промокод'];
 		$this->isCastrated();
 	}
 	public function getCrm($readyToApi = true)

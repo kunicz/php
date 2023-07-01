@@ -95,6 +95,7 @@ class TelegramBot
 		foreach ($this->orderData->analytics->utm as $key => $value) {
 			if ($value) $message[] = '<b>utm-' . $key . ':</b> ' . $value;
 		}
+		if ($this->orderData->promocode) $message[] = '🛍 ' . $this->orderData->promocode;
 		$this->message = implode("\r\n", $message);
 	}
 	public function submit()
