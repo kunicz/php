@@ -2,6 +2,7 @@
 
 namespace php2steblya;
 
+use php2steblya\File;
 use php2steblya\Logger;
 use php2steblya\OrderData_items as Items;
 use php2steblya\OrderData_comments as Comments;
@@ -9,6 +10,7 @@ use php2steblya\OrderData_payments as Payments;
 use php2steblya\OrderData_dostavka as Dostavka;
 use php2steblya\OrderData_zakazchik as Zakazchik;
 use php2steblya\OrderData_analytics as Analytics;
+use php2steblya\OrderData_promocode as Promocode;
 use php2steblya\OrderData_poluchatel as Poluchatel;
 
 class OrderData
@@ -39,11 +41,12 @@ class OrderData
 		$this->comments->setFlorist('');
 		$this->comments->setCourier('');
 		$this->analytics = new Analytics();
+		$this->promocode = new Promocode();
 		$this->status = 'new';
 		$this->customFields = [];
 		$this->customerId = '';
-		$this->promocode = '';
 	}
+
 	public function fromTilda(array $orderFromTilda)
 	{
 		// получатель		
@@ -58,7 +61,6 @@ class OrderData
 		if ($this->zakazchik->phone == $this->poluchatel->phone) $this->zakazchik->poluchatel(true);
 		//товары		
 		$this->items->fromTilda($orderFromTilda['payment']['products']);
-		$this->addCustomField('bukety_v_zakaze', $this->items->getBukets());
 		//платежи
 		$this->payments->fromTilda($orderFromTilda['payment']);
 		//доставка		
@@ -90,12 +92,16 @@ class OrderData
 		$this->analytics->setUtmContent($orderFromTilda['utm_content']);
 		$this->analytics->setUtmTerm($orderFromTilda['utm_term']);
 		$this->analytics->setYandexClientId($orderFromTilda['ya-client-id']);
+		//промокод
+		$this->promocode->setName($orderFromTilda['payment']['promocode']);
+		$this->promocode->setAmount($orderFromTilda['payment']['discount']);
 		//другое
 		$this->customerId = $orderFromTilda['customerId'];
 		$this->cardText = urldecode($orderFromTilda['text-v-kartochku']);
-		$this->promocode = $orderFromTilda['промокод'];
+
 		$this->isCastrated();
 	}
+
 	public function getCrm($readyToApi = true)
 	{
 		$order = [
@@ -156,22 +162,27 @@ class OrderData
 		if (!$readyToApi) return $order;
 		return json_encode($order);
 	}
+
 	public function setCustomerId($data)
 	{
 		$this->customerId = $data;
 	}
+
 	public function setStatus($data)
 	{
 		$this->status = $data;
 	}
+
 	public function setCardText($text)
 	{
 		$this->cardText = $text;
 	}
+
 	public function addCustomField($key, $value)
 	{
 		$this->customFields[$key] = $value;
 	}
+
 	private function isCastrated()
 	{
 		if (!in_array($this->items->get()[0]->name, castrated_items())) return;
