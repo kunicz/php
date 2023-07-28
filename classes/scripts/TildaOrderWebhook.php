@@ -3,36 +3,41 @@
 namespace php2steblya\scripts;
 
 use php2steblya\File;
+use php2steblya\Script;
 use php2steblya\Logger;
 use php2steblya\OrderData;
-use php2steblya\TelegramBot;
+use php2steblya\TelegramBot_order as TelegramBot;
 use php2steblya\ApiRetailCrmResponse_customers_get as Customers_get;
 use php2steblya\ApiRetailCrmResponse_orders_create as Orders_create;
 
-class TildaOrderWebhook
+class TildaOrderWebhook extends Script
 {
 	public $log;
 	private $site;
 	private $payed;
 	private $source;
+	private $testMode;
 	private array $postData;
 	private array $filePaths;
 	private array $ordersIds;
 
-	public function __construct(string $site, bool $payed = false, bool $testMode = false)
+	public function __construct($scriptData)
 	{
-		if (!in_array($site, allowed_sites())) die('site ' . $site . ' is not allowed');
-		$this->site = $site;
-		$this->payed = $payed;
+		parent::__construct($scriptData);
+		$this->site = $this->scriptData['site'];
+		if (!in_array($this->site, allowed_sites())) die('site ' . $this->site . ' is not allowed');
+		$this->payed = isset($this->scriptData['payed']) ? true : false;
+		$this->testMode = isset($this->scriptData['testMode']) ? true : false;
 		$this->source = 'tilda orders webhook';
 		$this->log = new Logger($this->source);
+		$this->ordersIds = [];
 		$this->filePaths = [
 			'orderTest.json' => dirname(dirname(dirname(__FILE__))) . '/testOrder.json',
 			'orders.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrders_' . $this->site . '.txt',
 			'orderLast.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrderLast_' . $this->site . '.txt',
 			'notPayed.txt' => dirname(dirname(dirname(__FILE__))) . '/TildaOrdersNotPayed_' . $this->site . '.txt',
 		];
-		if ($testMode) {
+		if ($this->testMode) {
 			$testOrderFile = new File($this->filePaths['orderTest.json']);
 			$this->postData = json_decode($testOrderFile->getContents(), true);
 			$this->log->push('isOrderTest', true);
@@ -45,14 +50,17 @@ class TildaOrderWebhook
 		$this->postData['date'] = date('Y-m-d H:i:s');
 		$this->log->push('postData', $this->postData);
 	}
+
 	public function init()
 	{
+		http_response_code(200);
 		if (!$this->isOrderReal()) return;
 		$this->isOrderPayed() ? $this->orderPayed() : $this->orderUnpayed();
 		$this->orderLastToFile();
 		$this->appendOrderToFile();
 		$this->log->writeSummary();
 	}
+
 	private function isOrderReal(): bool
 	{
 		$conditions = [
@@ -67,6 +75,7 @@ class TildaOrderWebhook
 			return true;
 		}
 	}
+
 	private function isOrderPayed(): bool
 	{
 		if ($this->payed) {
@@ -77,6 +86,7 @@ class TildaOrderWebhook
 			return false;
 		}
 	}
+
 	private function orderUnpayed()
 	{
 		/**
@@ -88,22 +98,22 @@ class TildaOrderWebhook
 		$remark = 'recieved order (tilda: ' . $this->postData['payment']['orderid'] . ') | ' . $this->site;
 		$this->log->setRemark($remark);
 	}
+
 	private function orderPayed()
 	{
-		/**
-		 * если заказ оплачен, то:
-		 * 1. отправляем сообщение в канал телеграмм
-		 * 2. удаляем postData заказа из массива неоплаченных
-		 * 3. для каждого товара в заказе создаем новый заказ в срм
-		 */
 		$this->log->insert('2. create orders');
+
+		//отправляем сообщение в канал телеграмм
 		$this->sendTelegram();
+		//удаляем postData заказа из массива неоплаченных
 		$this->removeFromUnpayed($this->postData['payment']['orderid']);
+		//для каждого товара в заказе создаем новый заказ в срм
 		$this->searchCustomer($this->postData['phone-zakazchika']);
 		for ($i = 0; $i < count($this->postData['payment']['products']); $i++) { //для каждого товара в заказе создаем отдельный заказ в срм
 			$postData = $this->postData;
 			$postData['payment']['products'] = [$this->postData['payment']['products'][$i]];
 			$postData['payment']['amount'] = $this->postData['payment']['products'][$i]['amount'];
+			if (isset($postData['payment']['systranid'])) $postData['payment']['systranid'] .= '-' . $i;
 			if ($postData['payment']['products'][$i]['name'] == 'подписка') { // тут будет правильное условие для товароыв из подписки
 				//тут будет цикл, создающий заказы по подписке
 			} else {
@@ -112,6 +122,7 @@ class TildaOrderWebhook
 				$this->createOrder($orderData);
 			}
 		}
+		//пишем лог
 		$products = [];
 		foreach ($this->postData['payment']['products'] as $product) {
 			$products[] = $product['name'];
@@ -123,11 +134,13 @@ class TildaOrderWebhook
 		$remark .= ' | ' . $this->site;
 		$this->log->setRemark($remark);
 	}
+
 	private function sendTelegram()
 	{
-		$telegramBot = new TelegramBot($this->postData);
+		$telegramBot = new TelegramBot($this->postData, $this->ordersIds);
 		$this->log->push('telegram', $telegramBot->getLog());
 	}
+
 	private function createOrder($orderData)
 	{
 		$args = [
@@ -138,6 +151,7 @@ class TildaOrderWebhook
 		$this->ordersIds[] = $order->getId();
 		$this->log->push($order->getId(), $order->getLog());
 	}
+
 	private function searchCustomer($phone)
 	{
 		$args = [
@@ -150,15 +164,18 @@ class TildaOrderWebhook
 		if (!$customer->has()) return;
 		$this->postData['customerId'] = $customer->getIds()[0];
 	}
+
 	private function appendOrderToFile()
 	{
 		File::collect($this->filePaths['orders.txt'], $this->postData);
 	}
+
 	private function orderLastToFile()
 	{
 		$orderLastFile = new File($this->filePaths['orderLast.txt']);
 		$orderLastFile->write(print_r($this->postData, true));
 	}
+
 	private function removeFromUnpayed($data)
 	{
 		$file = new File($this->filePaths['notPayed.txt']);

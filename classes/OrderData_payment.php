@@ -9,15 +9,18 @@ class OrderData_payment
 	private $paidAt;
 	private $type;
 	private $status;
+	private $comment;
 
 	public function __construct($paymentFromTilda = null)
 	{
 		if (!$paymentFromTilda) return;
-		if (isset($paymentFromTilda['systranid'])) $this->externalId = $paymentFromTilda['systranid'];
+		$this->externalId = $paymentFromTilda['systranid'] ?: null;
 		$this->amount = $paymentFromTilda['amount'];
 		$this->paidAt = date('Y-m-d H:i:s');
 		$this->type = 'site';
 		$this->status = 'paid';
+		$this->comment = '';
+		if (isset($paymentFromTilda['promocode'])) $this->comment = 'применен промокод: "' . $paymentFromTilda['promocode'] . '" (' . $paymentFromTilda['discount'] . ' р.)';
 	}
 	public function getCrm()
 	{
@@ -26,7 +29,8 @@ class OrderData_payment
 			'amount' => $this->amount,
 			'paidAt' => $this->paidAt,
 			'type' => $this->type,
-			'status' => $this->status
+			'status' => $this->status,
+			'comment' => $this->comment
 		];
 	}
 	public function setExternalId($data)
@@ -48,5 +52,9 @@ class OrderData_payment
 	public function setStatus($data)
 	{
 		$this->status = $data;
+	}
+	public function setComment($data)
+	{
+		$this->comment = $data;
 	}
 }

@@ -18,8 +18,6 @@ class UpdateYesterdayCustomers
 	 * получаем заказы за вчера
 	 * находим клиентов, пробегаемся по ним и очищаем адреса
 	 * cron: каждый день в 1:30
-	 * 
-	 * @return void Returns data of type void
 	 */
 	public function init(): void
 	{
@@ -32,8 +30,6 @@ class UpdateYesterdayCustomers
 	}
 	/**
 	 * получаем заказы из срм
-	 * 
-	 * @return void Returns data of type void
 	 */
 	public function collectOrders(): void
 	{
@@ -51,8 +47,6 @@ class UpdateYesterdayCustomers
 	/**
 	 * очищаем адреса, переписываем телеграм, ya_client_id
 	 * записываем "откуда узнал", если это первый заказ
-	 * 
-	 * @return void Returns data of type void
 	 */
 	public function clearAdreses(): void
 	{

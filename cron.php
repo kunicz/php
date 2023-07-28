@@ -1,6 +1,8 @@
 <?
 require_once __DIR__ . '/!autoload.php';
 
+use php2steblya\Script;
+
 $args = [];
 foreach ($argv as $arg) {
 	if (strpos($arg, '=') !== false) {
@@ -12,15 +14,7 @@ if (empty($args)) {
 	die('no arguments passed');
 }
 if (isset($args['script'])) {
-	$className = $args['script'];
-	$class = 'php2steblya\\scripts\\' . $className;
-	if (class_exists($class)) {
-		$scriptInstance = new $class();
-		$scriptInstance->init();
-		die($scriptInstance->log->getJson());
-	} else {
-		die('script not found');
-	}
+	Script::initClass($args);
 } else {
 	die('script not passed');
 }

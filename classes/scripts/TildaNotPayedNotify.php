@@ -4,7 +4,7 @@ namespace php2steblya\scripts;
 
 use php2steblya\File;
 use php2steblya\Logger;
-use php2steblya\TelegramBot;
+use php2steblya\TelegramBot_order as TelegramBot;
 
 class TildaNotPayedNotify
 {

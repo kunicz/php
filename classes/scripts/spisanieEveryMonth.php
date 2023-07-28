@@ -66,7 +66,7 @@ class SpisanieEveryMonth
 		$orderData->setCustomerId($this->customerId);
 		$orderData->dostavka->setDate(date('Y-m-d', strtotime('+1 day', strtotime(date('Y-m-t')))));
 		$orderData->zakazchik->setFirstName('списание');
-		$orderData->setStatus('sborka');
+		$orderData->setStatus('sobran');
 		$orderData->addCustomField('florist', 'boss');
 		$args = [
 			'site' => $_ENV['site_ostatki_id'],

@@ -24,35 +24,13 @@ class OrderData_items
 			$this->pushBuket($item);
 			$this->pushCard($item);
 		}
-		$this->pushTransportItem();
 	}
-	public function pushTransportItem()
-	{
-		/**
-		 * автоматически добавляем транспортировочное, если товары в заказе есть и это не определенные товары
-		 */
-		if (empty($this->items)) return;
-		if (in_array($this->items[0]->name, castrated_items())) return;
-		$this->items[0]->setTransposrPrice($this->site);
-		$item = new Item($this->site);
-		switch ($this->site) {
-			case $_ENV['site_2steblya_id']:
-				$item->setPrice(500);
-				$item->setName('Транспортировочное');
-				$item->setQuantity(1);
-				break;
-			case $_ENV['site_stf_id']:
-				$item->setPrice(100);
-				$item->setName('Упаковка');
-				$item->setQuantity(2);
-				break;
-		}
-		$this->items[] = $item;
-	}
+
 	public function get()
 	{
 		return $this->items;
 	}
+
 	public function getCrm(): array
 	{
 		$items = [];
@@ -61,6 +39,7 @@ class OrderData_items
 		}
 		return $items;
 	}
+
 	private function pushCard($item)
 	{
 		if (empty($item->properties)) return;
@@ -71,11 +50,13 @@ class OrderData_items
 			break;
 		}
 	}
+
 	public function getCards()
 	{
 		if (empty($this->cards)) return '';
 		return implode(', ', $this->cards);
 	}
+
 	private function pushBuket($item)
 	{
 		if (empty($item->properties)) return;
@@ -98,11 +79,13 @@ class OrderData_items
 		$buket .= ' (' . $item->quantity . ' шт)';
 		$this->bukets[] = $buket;
 	}
+
 	public function getBukets(): string
 	{
 		if (empty($this->bukets)) return '';
 		return implode(', ', $this->bukets);
 	}
+
 	public function push($item)
 	{
 		$this->items[] = $item;

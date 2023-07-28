@@ -2,7 +2,7 @@
 
 namespace php2steblya;
 
-use php2steblya\Logger;
+use php2steblya\LoggerException as Exception;
 use php2steblya\ApiRetailCrm as Api;
 
 class ApiRetailCrmResponse
@@ -20,24 +20,24 @@ class ApiRetailCrmResponse
 		$this->source = $source;
 		$this->log->push('parent source', $this->source);
 	}
+
 	public function request($getpost)
 	{
-		$this->api = new Api();
-		$this->api->curl($getpost, $this->method, $this->args);
 		$this->log->push('method', $this->method);
 		$this->log->push('queryString', $this->args);
 		$this->log->push('response', $this->api->response);
-		if ($this->api->hasErrors()) {
-			$this->log->pushError($this->api->getError());
-			$this->abort();
+		try {
+			$this->api = new Api();
+			$this->api->curl($getpost, $this->method, $this->args);
+			if ($this->api->hasErrors()) {
+				throw new Exception('заказ не создан');
+			}
+			$this->response = $this->api->response;
+		} catch (Exception $e) {
+			$e->abort($this->log);
 		}
-		$this->response = $this->api->response;
 	}
-	private function abort()
-	{
-		$this->log->writeSummary();
-		die($this->log->getJson());
-	}
+
 	public function getLog()
 	{
 		return $this->log->get();
