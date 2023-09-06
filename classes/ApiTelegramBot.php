@@ -29,8 +29,7 @@ class ApiTelegramBot extends Api
 
 	public function getError()
 	{
-		$error = $this->response->description;
-		return $error;
+		return $this->response->description;
 	}
 
 	public function hasErrors()

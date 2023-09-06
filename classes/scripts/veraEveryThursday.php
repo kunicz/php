@@ -35,7 +35,6 @@ class VeraEveryThursday
 		$orderData->dostavka->setNetCost(700);
 		$orderData->poluchatel->setName('Алена');
 		$orderData->poluchatel->setPhone($_ENV['vera_phone_poluchaelya']);
-		$orderData->items->pushTransportItem();
 		$args = [
 			'site' => $_ENV['site_stf_id'],
 			'order' => $orderData->getCrm()

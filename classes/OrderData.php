@@ -97,7 +97,7 @@ class OrderData
 		$this->promocode->setAmount($orderFromTilda['payment']['discount']);
 		//другое
 		$this->customerId = $orderFromTilda['customerId'];
-		$this->cardText = urldecode($orderFromTilda['text-v-kartochku']);
+		$this->cardText = $orderFromTilda['text-v-kartochku'];
 
 		$this->isCastrated();
 	}

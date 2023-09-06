@@ -51,10 +51,11 @@ class TelegramBot_order
 			foreach ($item['options'] as $option) {
 				switch ($option['option']) {
 					case 'фор мат':
-					case 'Размер':
+					case 'формат':
 						$props[0] = $option['variant'];
 						break;
 					case 'выебри карточку':
+					case 'карточка':
 						$props[1] = $option['variant'];
 						break;
 				}
@@ -79,16 +80,15 @@ class TelegramBot_order
 			if ($this->orderData->poluchatel->name) $message[] = $this->orderData->poluchatel->name;
 			if ($this->orderData->poluchatel->phone) $message[] = $this->orderData->poluchatel->phone;
 		}
-		//адрес
-		$message[] = '🏠 <b>Доставка:</b>';
-		if ($this->postData['uznat-adres-u-poluchatelya']) {
-			$message[] = 'узнать адрес у получателя';
-		} else {
-			if ($this->orderData->dostavka->getAdresText()) $message[] = $this->orderData->dostavka->getAdresText();
-		}
-		//дата и время
-		foreach ($this->orderData->items as $item) {
-			if (in_array($item['productName'], castrated_items())) continue;
+		//доставка
+		foreach ($this->postData['payment']['products'] as $item) {
+			if (in_array($item['name'], castrated_items())) continue;
+			$message[] = '🏠 <b>Доставка:</b>';
+			if ($this->postData['uznat-adres-u-poluchatelya']) {
+				$message[] = 'узнать адрес у получателя';
+			} else {
+				if ($this->orderData->dostavka->getAdresText()) $message[] = $this->orderData->dostavka->getAdresText();
+			}
 			$message[] = date('d.m.Y', strtotime($this->orderData->dostavka->date)) . ' ' . $this->orderData->dostavka->interval;
 			break;
 		}

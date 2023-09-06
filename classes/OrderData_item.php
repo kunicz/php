@@ -59,9 +59,12 @@ class OrderData_item
 		if (empty($this->properties)) return $props;
 		foreach ($this->properties as $prop) {
 			if (in_array($prop['option'], ['выебри карточку', 'карточка']) && in_array($this->name, castrated_items())) continue; //не публикуем карточку для кастратов
+			$name = str_replace('?', '', htmlspecialchars_decode($prop['option'])); //удаляем ? в названиях опций (скока? какой цвет?)
+			$value = preg_replace('/\s*\([^)]+\)/', '', $prop['variant']); //удаляем все, что в скобках
+			if (!$value) continue;
 			$props[] = [
-				'name' => str_replace('?', '', htmlspecialchars_decode($prop['option'])), //удаляем ? в названиях опций (скока? какой цвет?)
-				'value' => preg_replace('/\s*\([^)]+\)/', '', $prop['variant']) //удаляем все, что в скобках
+				'name' => $name,
+				'value' => $value
 			];
 		}
 		if ($this->sku->get()) {
