@@ -41,7 +41,7 @@ class OrderData_dostavka extends OrderData_dostavka_adres
 	}
 	public function setAuto($items)
 	{
-		$autoFormats = ['коробка', 'корзинка', 'корзина', 'букет-гигант', 'корзинища'];
+		$autoFormats = ['коробка', 'корзинка', 'корзина', 'букет-гигант', 'корзинища', 'коробка XL', 'корзина XXL', 'корхина XXXL', 'корзина ГКЛЯТЬ ТАК ГУЛЯТЬ'];
 		foreach ($items as $item) {
 			foreach ($item->properties as $option) {
 				if (in_array($option['option'], ['фор мат', 'Размер'])) continue;
