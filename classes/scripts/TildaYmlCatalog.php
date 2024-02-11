@@ -26,7 +26,7 @@ class TildaYmlCatalog
 		$urls = [
 			[
 				'site' => $_ENV['site_2steblya_id'],
-				'url' => 'https://2steblya.ru/tstore/yml/81f7b18311537d636b0044cd46380d01.yml'
+				'url' => 'https://2steblya.ru/tstore/yml/b19f73b0e905e66be0b4ce826caa05bf.yml'
 			],
 			[
 				'site' => $_ENV['site_stf_id'],

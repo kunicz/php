@@ -28,6 +28,7 @@ class OrderData
 	public $promocode;
 	public $status;
 	public array $customFields;
+	public $lovixlube;
 
 	public function __construct($site)
 	{
@@ -45,6 +46,7 @@ class OrderData
 		$this->status = 'new';
 		$this->customFields = [];
 		$this->customerId = '';
+		$this->lovixlube = false;
 	}
 
 	public function fromTilda(array $orderFromTilda)
@@ -98,6 +100,7 @@ class OrderData
 		//другое
 		$this->customerId = $orderFromTilda['customerId'];
 		$this->cardText = $orderFromTilda['text-v-kartochku'];
+		if ($orderFromTilda['lovixlube']) $this->lovixlube = true;
 
 		$this->isCastrated();
 	}
@@ -141,7 +144,8 @@ class OrderData
 				'adres_poluchatelya' => $this->dostavka->getAdresText(),
 				'zakazchil_poluchatel' => $this->zakazchik->poluchatel,
 				'ya_client_id_order' => $this->analytics->yandex['clientId'],
-				'uznat_adres_u_poluchatelya' => !$this->zakazchik->znaetAdres
+				'uznat_adres_u_poluchatelya' => !$this->zakazchik->znaetAdres,
+				'lovixlube' => $this->lovixlube
 			],
 			'source' => [
 				'keyword' => $this->analytics->utm['term'],

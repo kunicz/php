@@ -68,6 +68,10 @@ class TelegramBot_order
 		foreach ($products as $product) {
 			$message[] = $product;
 		}
+		//lovixlube
+		if ($this->orderData->lovixlube) {
+			$message[] = '❤️ Добавить Lovix';
+		}
 		//заказчик
 		$message[] = '🙎‍♂️ <b>Заказчик:</b>';
 		$telegram = $this->orderData->zakazchik->telegram ? ' @' . $this->orderData->zakazchik->telegram : '';
