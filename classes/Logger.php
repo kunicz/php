@@ -47,6 +47,12 @@ class Logger
 		$file = new File($url);
 		$file->append($this->summary);
 	}
+	public function write()
+	{
+		$url = dirname(dirname(__FILE__)) . '/log/log-' . date('Ym') . '.txt';
+		$file = new File($url);
+		$file->append(print_r($this->contents, true));
+	}
 	/**
 	 * errors
 	 */

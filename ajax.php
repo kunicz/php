@@ -12,6 +12,6 @@ use php2steblya\Script;
 if (isset($_GET['script'])) {
 	Script::initClass($_GET);
 } else {
-	header('Location: https://2steblya.ru/php');
+	header('Location: https://2steblya.ru/');
 	die();
 }

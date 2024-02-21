@@ -4,8 +4,19 @@ namespace php2steblya;
 
 class DB_stf extends DB
 {
+	public $log;
+	protected $c;
+	protected $r;
+	protected $u;
+	protected $d;
+
 	public function __construct()
 	{
+		$this->c = 'создание';
+		$this->r = 'получение';
+		$this->u = 'обновление';
+		$this->d = 'удаление';
+		$this->log = new Logger('DB connect');
 		$this->db_host = $_ENV['DB_HOST'];
 		$this->db_username = $_ENV['DB_USERNAME'];
 		$this->db_database = $_ENV['DB_DATABASE'];
@@ -22,6 +33,17 @@ class DB_stf extends DB
 			SELECT *
 			FROM countries
 		", "$this->r стран");
+	}
+
+	/**
+	 * получаем все магазины
+	 */
+	public function getShops()
+	{
+		return $this->sql("
+			SELECT *
+			FROM shops
+		", "$this->r магазинов");
 	}
 
 	/**
@@ -85,9 +107,9 @@ class DB_stf extends DB
 	private static function pdoParams(array $data)
 	{
 		$p = [
-			0 => '', 				//paramsKeys
-			1 => '', 				//paramsKeysColon
-			2 => '',				//paramsKeysColonKeys
+			0 => '', 			//paramsKeys
+			1 => '', 			//paramsKeysColon
+			2 => '',			//paramsKeysColonKeys
 			3 => $data			//paramsValues
 		];
 		foreach (array_keys($data) as $key) {

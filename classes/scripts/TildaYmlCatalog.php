@@ -26,15 +26,12 @@ class TildaYmlCatalog
 		$urls = [
 			[
 				'site' => $_ENV['site_2steblya_id'],
-				'url' => 'https://2steblya.ru/tstore/yml/b19f73b0e905e66be0b4ce826caa05bf.yml'
+				'url' => $_ENV['yml_catalog_2steblya']
 			],
 			[
 				'site' => $_ENV['site_stf_id'],
-				'url' => 'https://staytrueflowers.ru/tstore/yml/738043006302c6389361eac93fc53c27.yml'
+				'url' => $_ENV['yml_catalog_stf']
 			]
-			//'2steblya' => 'https://tilda.imb-service.ru/file/get/e51ac7a9e59a5d2b84a945de066810c7.yml'
-			//'Stay True flowers' => 'https://staytrueflowers.ru/tstore/yml/738043006302c6389361eac93fc53c27.yml'
-			//'Stay True flowers' => 'https://tilda.imb-service.ru/file/get/8aec43b5129e6d08c5245877df744cec.yml'
 		];
 		for ($i = 0; $i < count($urls); $i++) {
 			$this->site = $urls[$i]['site'];

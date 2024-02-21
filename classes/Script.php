@@ -21,7 +21,7 @@ class Script
 		if (class_exists($class)) {
 			$scriptInstance = new $class($scriptData);
 			$scriptInstance->init();
-			die($scriptInstance->log->getJson());
+			die();
 		} else {
 			die('script not found');
 		}
