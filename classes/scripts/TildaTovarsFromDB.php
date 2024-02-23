@@ -29,7 +29,9 @@ class TildaTovarsFromDB
 				$stmt = "SELECT id FROM tovars WHERE $this->db_request = 1";
 				break;
 			case 'hours_to_produce':
-				$stmt = "SELECT id,hours_to_produce FROM tovars WHERE hours_to_produce IS NOT NULL";
+			case 'date_to_open':
+			case 'days_to_close':
+				$stmt = "SELECT id,$this->db_request FROM tovars WHERE $this->db_request IS NOT NULL AND $this->db_request != 0";
 				break;
 			case 'allowed_today':
 				$stmt = "SELECT id FROM tovars WHERE (allowed_today = 1 OR vitrina = 1)";
@@ -45,6 +47,9 @@ class TildaTovarsFromDB
 					$cardType = $this->params['card_type'];
 					$stmt .= " WHERE card_type = '$cardType'";
 				}
+				break;
+			case 'days_to_close':
+				$stmt = "SELECT id,days_to_close FROM tovars WHERE date_to_open IS NOT NULL";
 				break;
 			case 'columns':
 				$stmt = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tovars' AND COLUMN_NAME NOT IN ('title', 'id', 'shop_crm_id','hours_to_produce','card_type')";
