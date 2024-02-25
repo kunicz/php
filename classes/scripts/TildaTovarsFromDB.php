@@ -22,22 +22,18 @@ class TildaTovarsFromDB
 		if (!$this->db_request) die('tovars not set');
 		switch ($this->db_request) {
 			case 'hidden':
-			case 'vitrina':
 			case 'dopnik':
+			case 'allowed_today':
 			case 'paid_delivery':
 			case 'multiple_prices':
+			case 'fixed_price':
 				$stmt = "SELECT id FROM tovars WHERE $this->db_request = 1";
 				break;
+			case 'vitrina_id':
 			case 'hours_to_produce':
 			case 'date_to_open':
 			case 'days_to_close':
 				$stmt = "SELECT id,$this->db_request FROM tovars WHERE $this->db_request IS NOT NULL AND $this->db_request != 0";
-				break;
-			case 'allowed_today':
-				$stmt = "SELECT id FROM tovars WHERE (allowed_today = 1 OR vitrina = 1)";
-				break;
-			case 'card_types':
-				$stmt = "SELECT DISTINCT card_type FROM tovars WHERE card_type IS NOT NULL";
 				break;
 			case 'card_type':
 				$stmt = "SELECT id FROM tovars";
@@ -47,12 +43,6 @@ class TildaTovarsFromDB
 					$cardType = $this->params['card_type'];
 					$stmt .= " WHERE card_type = '$cardType'";
 				}
-				break;
-			case 'days_to_close':
-				$stmt = "SELECT id,days_to_close FROM tovars WHERE date_to_open IS NOT NULL";
-				break;
-			case 'columns':
-				$stmt = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tovars' AND COLUMN_NAME NOT IN ('title', 'id', 'shop_crm_id','hours_to_produce','card_type')";
 				break;
 			default:
 				die('tovars rule not found');
