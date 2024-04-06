@@ -3,127 +3,63 @@
 namespace php2steblya;
 
 use php2steblya\File;
+use php2steblya\telegram\Response_sendMessage_post;
 
 class Logger
 {
-	private $source;
-	private $summary;
-	private $summaryRemark;
-	private array $errors;
-	private array $contents;
-	private $contentsKey;
+	private static $instance;
+	private $logData = [];
 
-	public function __construct($source = '')
+	private function __construct()
 	{
-		$this->source = $source;
-		$this->contentsKey = null;
-		$this->errors = [];
-		$this->contents = [];
-	}
-	public function setSource($data)
-	{
-		$this->source = $data;
+		// Private constructor to prevent instantiation
 	}
 
-	/**
-	 * summary
-	 */
-	private function buildSummary()
+	public static function getInstance()
 	{
-		$this->summary = date('Y-m-d H:i:s');
-		$this->summary .= ($this->hasErrors() ? ' | fail | ' : ' | success | ');
-		$this->summary .= (isset($this->contents['parent source']) ? $this->contents['parent source'] . ' : ' : '') . $this->source;
-		if ($this->hasErrors()) {
-			$this->summary .= ' | ' . implode(',', $this->errors);
-		} else {
-			if (!$this->summaryRemark) return;
-			$this->summary .= ' | ' . $this->summaryRemark;
+		if (self::$instance === null) {
+			self::$instance = new self();
 		}
+		return self::$instance;
 	}
-	public function writeSummary()
+
+	public function addToLog($key, $value = null)
 	{
-		$this->buildSummary();
-		$url = dirname(dirname(__FILE__)) . '/log/log-' . date('Ym') . '.txt';
-		$file = new File($url);
-		$file->append($this->summary);
+		$this->logData[$key] = $value ?: 'none';
 	}
-	public function write()
+
+	public function sendToAdmin()
 	{
-		$url = dirname(dirname(__FILE__)) . '/log/log-' . date('Ym') . '.txt';
-		$file = new File($url);
-		$file->append(print_r($this->contents, true));
-	}
-	/**
-	 * errors
-	 */
-	public function pushError($error)
-	{
-		$this->errors[] = $error;
-	}
-	private function hasErrors()
-	{
-		return !empty($this->errors);
-	}
-	/**
-	 * comments
-	 */
-	public function pushNote($note)
-	{
-		$this->contents['notes'][] = $note;
-	}
-	/**
-	 * contents
-	 */
-	public function insert($key)
-	{
-		$this->contentsKey = $key;
-		if (isset($this->contents[$key])) return;
-		$this->contents[$key] = [];
-	}
-	public function switch($key)
-	{
-		$this->contentsKey = $key;
-	}
-	public function push($key, $data)
-	{
-		if (!$this->contentsKey) {
-			$this->contents[$key] = $data;
-		} else {
-			$this->contents[$this->contentsKey][$key] = $data;
-		}
-	}
-	public function setRemark($remark)
-	{
-		if (is_array($remark)) $remark = implode(',', $remark);
-		$this->summaryRemark = $remark;
-	}
-	/**
-	 * returning
-	 */
-	public function get()
-	{
-		$log = [
-			'source' => $this->source,
-			'errors' => $this->errors,
+		$time = date('Y-m-d-H-i-s');
+
+		//отправляем сообщение
+		$message = [
+			date('d.m.Y H:i:s'),
+			'<b>script</b>: ' . $this->logData['script'],
+			'<b>error_file</b>: ' . $this->logData['error_file'],
+			'<b>error_message</b>: ' . $this->logData['error_message'],
+			'<b>logger_data</b> : <a href="https://php.2steblya.ru/error_logs/' . $time . '.json">' . $time . '.json</a>'
 		];
-		if ($this->summaryRemark) $log['remark'] = $this->summaryRemark;
-		foreach ($this->contents as $key => $value) {
-			$log[$key] = $value;
-		}
-		return $log;
+		$args = [
+			'chat_id' => $_ENV['telegram_admin_chat_id'],
+			'parse_mode' => 'HTML',
+			'text' => implode("\r\n", $message)
+		];
+		$telegram = new Response_sendMessage_post('admin');
+		$telegram->sendMessage($args);
+
+		//записываем лог в файл
+		$file = new File('/home/k/kuniczw4/php.2steblya.ru/public_html/error_logs/' . $time . '.json');
+		$file->write(json_encode($this->logData, JSON_PRETTY_PRINT));
 	}
-	public function getJson()
+
+	public static function shortenPath($string)
 	{
-		return json_encode($this->get());
+		return str_replace('/home/k/kuniczw4/php.2steblya.ru/public_html/classes/', '', $string);
 	}
-	public function print()
+
+	public function getLogData()
 	{
-		return print_r($this->get(), true);
-	}
-	public function dump()
-	{
-		echo '<pre>';
-		var_dump($this->get());
-		echo '</pre>';
+		return $this->logData;
 	}
 }

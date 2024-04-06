@@ -27,7 +27,7 @@ class File
 		fwrite($this->file, "\r\n" . $text);
 		fclose($this->file);
 	}
-	public static function collect(string $filePath, $data)
+	public static function appendToArray(string $filePath, $data)
 	{
 		$file = new self($filePath);
 		$items = $file->getContents();

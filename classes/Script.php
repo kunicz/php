@@ -4,13 +4,6 @@ namespace php2steblya;
 
 class Script
 {
-	protected $scriptData;
-
-	public function __construct($scriptData = [])
-	{
-		$this->scriptData = $scriptData;
-	}
-
 	/**
 	 * инициализируем класс скрипта
 	 */

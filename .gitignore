@@ -2,4 +2,5 @@
 .gitattributes
 composer.lock
 vendor/
+classes (v1)/
 db_structure.yml

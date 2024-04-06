@@ -4,19 +4,14 @@ namespace php2steblya;
 
 use php2steblya\Logger;
 use LireinCore\YMLParser\YML as YMLparser;
-use php2steblya\LoggerException as Exception;
 
 class YML
 {
 	public static function ymlToArray(string $url)
 	{
-		/**
-		 * конвертируем yml файл в массив
-		 */
-		$log = new Logger('YMLparser');
 		$catalog = [];
-		$ymlParser = new YMLparser();
 		try {
+			$ymlParser = new YMLparser();
 			$ymlParser->parse($url);
 			$catalog['date'] = $ymlParser->getDate();
 			$shop = $ymlParser->getShop();
@@ -28,23 +23,23 @@ class YML
 					if ($offer->isValid()) {
 						$catalog['offers'][] = $offer->getData();
 					} else {
-						$log->pushError($offer->getErrors());
+						throw new \Exception('offer not valid: ' . $offer->getErrors());
 					}
 				}
 			} else {
-				$log->pushError($shop->getErrors());
+				throw new \Exception('shop not valid: ' . $shop->getErrors());
 			}
-		} catch (Exception $e) {
-			$e->abort($log);
+		} catch (\Exception $e) {
+			$logger = Logger::getInstance();
+			$logger->addToLog('error_message', $e->getMessage());
+			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
+			$logger->sendToAdmin();
 		}
 		return $catalog;
 	}
+
 	public static function arrayToYml(array $catalog)
 	{
-		/**
-		 * собираем и сохраянем yml файл
-		 * сохраняем в текстовый файл json, чтобы использовать его в preserveDisabledOffers
-		 */
 		$out = [];
 		$out[] = '<?xml version="1.0" encoding="UTF-8"?>';
 		$out[] = '<yml_catalog date="' . $catalog['date'] . '">';
@@ -70,10 +65,10 @@ class YML
 			$out[] = '<url>' . $offer['url'] . '</url>';
 			$out[] = '<price>' . $offer['price'] . '</price>';
 			$out[] = '<currencyId>' . $offer['currencyId'] . '</currencyId>';
-			//$out[] = '<categoryId>' . $offer['categoryId'] . '</categoryId>';
+			$out[] = '<categoryId></categoryId>';
 			/*foreach ($offer['params'] as $name => $value) {
 			$out[] = '<param name="' . $name . '">' . $value . '</param>';
-		}*/
+			}*/
 			$out[] = '</offer>';
 		}
 		$out[] = '</offers>';

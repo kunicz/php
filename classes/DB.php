@@ -2,15 +2,16 @@
 
 namespace php2steblya;
 
-use \PDO;
+use php2steblya\Logger;
 
 class DB
 {
-	protected $pdo;
-	protected $db_host;
-	protected $db_database;
-	protected $db_username;
-	protected $db_password;
+	private $pdo;
+	private $db_host;
+	private $db_database;
+	private $db_username;
+	private $db_password;
+	private static $instance = null;
 
 	public function __construct()
 	{
@@ -21,15 +22,30 @@ class DB
 		$this->connect();
 	}
 
+	public static function getInstance()
+	{
+		if (self::$instance === null) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
 	/**
 	 * подключение к базе данных
 	 */
 	private function connect()
 	{
 		try {
-			$this->pdo = new PDO('mysql:host=' . $this->db_host . ';dbname=' . $this->db_database . ';', $this->db_username, $this->db_password);
+			$this->pdo = new \PDO('mysql:host=' . $this->db_host . ';dbname=' . $this->db_database . ';', $this->db_username, $this->db_password);
 		} catch (\PDOException $e) {
-			var_dump($e->getMessage());
+			$logger = Logger::getInstance();
+			$logger->addToLog('error_message', $e->getMessage());
+			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
+			$logger->addToLog('db_connect_host', $this->db_host);
+			$logger->addToLog('db_connect_username', $this->db_username);
+			$logger->addToLog('db_connect_database', $this->db_database);
+			$logger->addToLog('db_connect_password', $this->db_password);
+			$logger->sendToAdmin();
 		}
 	}
 
@@ -40,26 +56,33 @@ class DB
 	{
 		try {
 			$stmt = trim(str_replace(["\r", "\n", "\t"], ' ', $stmt));
-			$method = strstr($stmt, ' ', true); //первое слово (SELECT,INSERT,UPDATE,DELETE)
-			$stmt = $this->pdo->prepare($stmt);
+			$method = strstr($stmt, ' ', true);
+
+			if (!in_array($method, ['SELECT', 'INSERT', 'UPDATE', 'DELETE'])) {
+				throw new \PDOException('Unsupported query type: ' . $method);
+			}
+
+			$pdo = $this->pdo->prepare($stmt);
 			switch ($method) {
 				case 'SELECT':
-					$stmt->execute();
-					return $stmt->fetchAll(PDO::FETCH_OBJ);
+					$pdo->execute();
+					return $pdo->fetchAll(\PDO::FETCH_OBJ);
 				case 'UPDATE':
 				case 'INSERT':
 				case 'DELETE':
-					//если в массиве параметров массивы, то работаем с несколькими записями
-					if (isset($params[0]) && is_array($params[0])) {
-						foreach ($params as $param) {
-							$stmt->execute($param);
-						}
-					} else {
-						$stmt->execute($params);
+					foreach ($params as $key => $value) {
+						$pdo->bindValue(':' . $key, $value);
 					}
+					$pdo->execute();
+					break;
 			}
 		} catch (\PDOException $e) {
-			var_dump($e->getMessage());
+			$logger = Logger::getInstance();
+			$logger->addToLog('error_message', $e->getMessage());
+			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
+			$logger->addToLog('db_sql_params', $params);
+			$logger->addToLog('db_sql_stmt', $stmt);
+			$logger->sendToAdmin();
 		}
 	}
 }
