@@ -4,6 +4,7 @@ namespace php2steblya\scripts;
 
 use php2steblya\DB;
 use php2steblya\Logger;
+use php2steblya\Finish;
 use php2steblya\utils\DateTime;
 use php2steblya\order\OrderData_telegram;
 use php2steblya\telegram\Response_sendMessage_post;
@@ -16,6 +17,7 @@ class Tilda_orders_not_paid extends Script
 	{
 		$this->db = DB::getInstance();
 		$this->logger = Logger::getInstance();
+		$this->logger->addToLog('script', __CLASS__);
 	}
 
 	public function init()
@@ -57,8 +59,7 @@ class Tilda_orders_not_paid extends Script
 				$this->db->sql("DELETE FROM orders WHERE db_id = '{$unpaidOrder->db_id}'");
 			}
 		}
-
-		echo json_encode($this->logger->getLogData());
+		Finish::success();
 	}
 
 	private function telegramChannel()

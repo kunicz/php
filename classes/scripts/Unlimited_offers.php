@@ -3,6 +3,7 @@
 namespace php2steblya\scripts;
 
 use php2steblya\Logger;
+use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 use php2steblya\retailcrm\Response_reference_stores_get;
 use php2steblya\retailcrm\Response_store_inventories_upload_post;
@@ -15,13 +16,16 @@ class Unlimited_offers extends Script
 	public function init()
 	{
 		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', Logger::shortenPath(__FILE__));
+		$this->logger->addToLog('script', __CLASS__);
 
-		$this->collectProducts();
-		$this->collectOffers();
-		$this->fillInventories();
-
-		echo json_encode($this->logger->getLogData());
+		try {
+			$this->collectProducts();
+			$this->collectOffers();
+			$this->fillInventories();
+			Finish::success();
+		} catch (\Exception $e) {
+			Finish::fail($e);
+		}
 	}
 
 	private function collectProducts($page = 1)
@@ -35,6 +39,7 @@ class Unlimited_offers extends Script
 		];
 		$response = new Response_store_products_get();
 		$response->getProductsFromCRM($args);
+		if ($response->hasError()) throw new \Exception($response->getError());
 		$this->logger->addToLog('unlimited_offers_total_page_count', $response->getTotalPageCount());
 		if (empty($response->getProducts())) return;
 		foreach ($response->getProducts() as $product) {
@@ -69,6 +74,7 @@ class Unlimited_offers extends Script
 		if (empty($this->offers)) return;
 		$response = new Response_store_inventories_upload_post();
 		$response->uploadInventoriesToCRM(['offers' => json_encode($this->offers)]);
+		if ($response->hasError()) throw new \Exception($response->getError());
 	}
 
 	private function activeCrmStores()

@@ -39,6 +39,7 @@ class OrderData_telegram
 			$products[] = $product['name'] . ($product['isVitrina'] ? ' с витрины' : '') . ' (' . (!empty($props) ? implode(' ', $props) . ', ' : '') . $product['quantity'] . ' шт) - ' . $product['amount'] . ' р.';
 		}
 		//товары
+		$message[] = '🏪 <b>Магазин:</b> ' . $od['site'];
 		$message[] = '🌸 <b>Товары:</b>';
 		foreach ($products as $product) {
 			$message[] = $product;

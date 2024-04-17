@@ -3,6 +3,7 @@
 namespace php2steblya\scripts;
 
 use php2steblya\Logger;
+use php2steblya\Finish;
 use php2steblya\retailcrm\Response_orders_get;
 use php2steblya\retailcrm\Response_customers_edit_post;
 use php2steblya\order\OrderData_telegram;
@@ -14,12 +15,15 @@ class Recernt_customers extends Script
 	public function init()
 	{
 		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', Logger::shortenPath(__FILE__));
+		$this->logger->addToLog('script', __CLASS__);
 
-		$this->collectOrders();
-		$this->updateCustomers();
-
-		echo json_encode($this->logger->getLogData());
+		try {
+			$this->collectOrders();
+			$this->updateCustomers();
+			Finish::success();
+		} catch (\Exception $e) {
+			Finish::fail($e);
+		}
 	}
 
 	private function collectOrders()
@@ -33,6 +37,7 @@ class Recernt_customers extends Script
 		];
 		$response = new Response_orders_get();
 		$response->getOrdersFromCrm($args);
+		if ($response->hasError()) throw new \Exception($response->getError());
 		$this->orders = $response->getOrders();
 
 		$this->logger->addToLog('clearCustomerAdres_collect_orders', $response->getOrders());
@@ -82,6 +87,7 @@ class Recernt_customers extends Script
 			];
 			$response = new Response_customers_edit_post($order->customer->id);
 			$response->editCustomerInCrm($args);
+			if ($response->hasError()) throw new \Exception($response->getError());
 
 			$i++;
 		}

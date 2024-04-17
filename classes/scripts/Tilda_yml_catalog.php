@@ -6,6 +6,7 @@ use php2steblya\DB;
 use php2steblya\YML;
 use php2steblya\File;
 use php2steblya\Logger;
+use php2steblya\Finish;
 
 class Tilda_yml_catalog extends Script
 {
@@ -17,7 +18,7 @@ class Tilda_yml_catalog extends Script
 	{
 		$this->db = DB::getInstance();
 		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', Logger::shortenPath(__FILE__));
+		$this->logger->addToLog('script', __CLASS__);
 	}
 
 	public function init()
@@ -39,8 +40,7 @@ class Tilda_yml_catalog extends Script
 			$this->optimizeOffers();
 			$this->updateCatalog();
 		}
-
-		echo json_encode($this->logger->getLogData());
+		Finish::success();
 	}
 
 	private function isChanged()

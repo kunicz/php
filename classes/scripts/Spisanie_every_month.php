@@ -4,6 +4,7 @@ namespace php2steblya\scripts;
 
 use php2steblya\DB;
 use php2steblya\Logger;
+use php2steblya\Finish;
 use php2steblya\retailcrm\Response_orders_get;
 use php2steblya\retailcrm\Response_orders_edit_post;
 use php2steblya\retailcrm\Response_orders_create_post;
@@ -16,16 +17,22 @@ class Spisanie_every_month extends Script
 	{
 		$this->db = DB::getInstance();
 		$this->logger = Logger::getInstance();
+		$this->logger->addToLog('script', __CLASS__);
 		$this->customerId = 1383;
-		$this->site = 'ostatki';
 	}
 
 	public function init()
 	{
-		$this->spisanieOld();
-		$this->spisanieNew();
-
-		echo json_encode($this->logger->getLogData());
+		try {
+			foreach (['ostatki-msk'] as $site) {
+				$this->site = $site;
+				$this->spisanieOld();
+				$this->spisanieNew();
+				Finish::success();
+			}
+		} catch (\Exception $e) {
+			Finish::fail($e);
+		}
 	}
 
 	private function spisanieOld()

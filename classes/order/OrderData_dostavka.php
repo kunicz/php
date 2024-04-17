@@ -14,6 +14,7 @@ class OrderData_dostavka
 		}
 	}
 
+	//depricated
 	public static function isVehicleOnly($products)
 	{
 		$autoFormats = explode(',', $_ENV['vehicle_only_products']);

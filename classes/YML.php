@@ -9,6 +9,7 @@ class YML
 {
 	public static function ymlToArray(string $url)
 	{
+		$logger = Logger::getInstance();
 		$catalog = [];
 		try {
 			$ymlParser = new YMLparser();
@@ -23,14 +24,15 @@ class YML
 					if ($offer->isValid()) {
 						$catalog['offers'][] = $offer->getData();
 					} else {
-						throw new \Exception('offer not valid: ' . $offer->getErrors());
+						$logger->addToLog('error_offer', $offer->getErrors());
+						throw new \Exception('offer not valid');
 					}
 				}
 			} else {
-				throw new \Exception('shop not valid: ' . $shop->getErrors());
+				$logger->addToLog('error_shop', $shop->getErrors());
+				throw new \Exception('shop not valid');
 			}
 		} catch (\Exception $e) {
-			$logger = Logger::getInstance();
 			$logger->addToLog('error_message', $e->getMessage());
 			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
 			$logger->sendToAdmin();
@@ -56,8 +58,8 @@ class YML
 		//$out[] = '<categories></categories>';
 		$out[] = '<offers>';
 		foreach ($catalog['offers'] as $offer) {
-			preg_match('/\-(\d+)\-/', $offer['url'], $id);
-			$out[] = '<offer id="' . $offer['id'] . '" productId="' . $id[1] . '" quantity="9999">'; //quantity не работает, так как в срм ручное управление остатками. меняем через api
+			preg_match('/tproduct\/(?:\d+-)?(\d+)/', $offer['url'], $groupId);
+			$out[] = '<offer id="' . $offer['id'] . '" productId="' . $groupId[1] . '" quantity="9999">'; //quantity не работает, так как в срм ручное управление остатками. меняем через api
 			$out[] = '<name>' . $offer['name'] . '</name>';
 			$out[] = '<vendorCode>' . $offer['vendorCode'] . '</vendorCode>';
 			//$out[] = '<description></description>';

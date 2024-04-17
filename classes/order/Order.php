@@ -42,7 +42,6 @@ class Order
 				'parse_mode' => 'HTML',
 				'text' => OrderData_telegram::getMessageForChannel($this->orderData)
 			];
-			$this->logger->addToLog('telegram_args', $args);
 			$response = new Response_sendMessage_post('orders');
 			$response = $response->sendMessage($args);
 			return $response->result->message_id;

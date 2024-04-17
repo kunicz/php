@@ -2,6 +2,9 @@
 
 namespace php2steblya;
 
+use php2steblya\Finish;
+use php2steblya\Logger;
+
 class Script
 {
 	/**
@@ -9,14 +12,16 @@ class Script
 	 */
 	public static function initClass($scriptData = [])
 	{
-		$className = $scriptData['script'];
-		$class = 'php2steblya\\scripts\\' . $className;
-		if (class_exists($class)) {
+		try {
+			$className = $scriptData['script'];
+			$class = 'php2steblya\\scripts\\' . $className;
+			if (!class_exists($class)) throw new \Exception("script ($className) not found");
 			$scriptInstance = new $class($scriptData);
 			$scriptInstance->init();
-			die();
-		} else {
-			die('script not found');
+		} catch (\Exception $e) {
+			$logger = Logger::getInstance();
+			$logger->addToLog('scriptData', $scriptData);
+			Finish::fail($e);
 		}
 	}
 }

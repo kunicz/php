@@ -7,6 +7,7 @@ use php2steblya\Logger;
 class DB
 {
 	private $pdo;
+	private $error;
 	private $db_host;
 	private $db_database;
 	private $db_username;
@@ -38,6 +39,7 @@ class DB
 		try {
 			$this->pdo = new \PDO('mysql:host=' . $this->db_host . ';dbname=' . $this->db_database . ';', $this->db_username, $this->db_password);
 		} catch (\PDOException $e) {
+			$this->error = $e->getMessage();
 			$logger = Logger::getInstance();
 			$logger->addToLog('error_message', $e->getMessage());
 			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
@@ -77,6 +79,7 @@ class DB
 					break;
 			}
 		} catch (\PDOException $e) {
+			$this->error = $e->getMessage();
 			$logger = Logger::getInstance();
 			$logger->addToLog('error_message', $e->getMessage());
 			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
@@ -84,5 +87,14 @@ class DB
 			$logger->addToLog('db_sql_stmt', $stmt);
 			$logger->sendToAdmin();
 		}
+	}
+
+	public function getError()
+	{
+		return $this->error;
+	}
+	public function hasError()
+	{
+		return $this->error;
 	}
 }

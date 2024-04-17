@@ -20,10 +20,10 @@ class Response_orders_edit_post extends Response
 		$this->request('post');
 
 		$logger = Logger::getInstance();
-		$logger->addToLog('order_' . $this->orderId . 'edit_file', Logger::shortenPath(__FILE__));
-		$logger->addToLog('order_' . $this->orderId . 'edit_method', $this->retailcrmMethod);
-		$logger->addToLog('order_' . $this->orderId . 'edit_args', $this->retailcrmArgs);
-		$logger->addToLog('order_' . $this->orderId . 'edit_response', $this->response);
+		$logger->addToLog('order_' . $this->orderId . '_edit_file', Logger::shortenPath(__FILE__));
+		$logger->addToLog('order_' . $this->orderId . '_edit_method', $this->retailcrmMethod);
+		$logger->addToLog('order_' . $this->orderId . '_edit_args', $this->retailcrmArgs);
+		$logger->addToLog('order_' . $this->orderId . '_edit_response', $this->response);
 
 		return $this->response;
 	}

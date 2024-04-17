@@ -20,7 +20,7 @@ class Api extends \php2steblya\Api
 		}
 		return $this->response->errorMsg . (count($errorsMsg) ? ' : ' . implode(',', $errorsMsg) : '');
 	}
-	public function hasErrors()
+	public function hasError()
 	{
 		return !$this->response->success;
 	}

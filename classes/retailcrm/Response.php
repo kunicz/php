@@ -10,14 +10,15 @@ class Response
 	protected ?object $response;
 	protected array $retailcrmArgs;
 	protected string $retailcrmMethod;
+	private $api;
 
 	public function request($httpMethod)
 	{
 		try {
-			$api = new Api();
-			$api->curl($httpMethod, $this->retailcrmMethod, $this->retailcrmArgs);
-			$this->response = $api->getResponse();
-			if ($api->hasErrors()) throw new \Exception($api->getError());
+			$this->api = new Api();
+			$this->api->curl($httpMethod, $this->retailcrmMethod, $this->retailcrmArgs);
+			$this->response = $this->api->getResponse();
+			if ($this->api->hasError()) throw new \Exception($this->api->getError());
 		} catch (\Exception $e) {
 			$logger = Logger::getInstance();
 			$logger->addToLog('error_message', $e->getMessage());
@@ -29,6 +30,14 @@ class Response
 		}
 	}
 
+	public function getError()
+	{
+		return $this->api->getError();
+	}
+	public function hasError()
+	{
+		return $this->api->hasError();
+	}
 	public function getTotalCount()
 	{
 		return $this->response->pagination->totalCount;

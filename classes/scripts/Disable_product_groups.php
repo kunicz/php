@@ -3,6 +3,7 @@
 namespace php2steblya\scripts;
 
 use php2steblya\Logger;
+use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 use php2steblya\retailcrm\Response_store_productgroups_get;
 use php2steblya\retailcrm\Response_store_productgroups_edit_post;
@@ -16,27 +17,25 @@ class Disable_product_groups extends Script
 	public function __construct($scriptData = [])
 	{
 		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', Logger::shortenPath(__FILE__));
+		$this->logger->addToLog('script', __CLASS__);
 		$this->site = isset($scriptData['site']) ? $scriptData['site'] : null;
 	}
 
 	public function init()
 	{
-		if (!$this->site) {
-			echo 'site not set';
-			return;
-		}
-		if (!$this->isSiteExists()) {
-			echo 'site not exists';
-			return;
-		}
+		try {
+			if (!$this->site) throw new \Exception('site not set');
+			if (!$this->isSiteExists()) throw new \Exception('site not exists');
 
-		$this->collectGroups();
-		$this->disableGroups();
-		$this->collectProducts();
-		$this->removeGroupsFromProducts();
+			$this->collectGroups();
+			$this->disableGroups();
+			$this->collectProducts();
+			$this->removeGroupsFromProducts();
 
-		echo json_encode($this->logger->getLogData());
+			Finish::success();
+		} catch (\Exception $e) {
+			Finish::fail($e);
+		}
 	}
 
 	private function collectGroups()
@@ -50,6 +49,7 @@ class Disable_product_groups extends Script
 			]
 		];
 		$response->getProductGroupsFromCRM($args);
+		if ($response->hasError()) throw new \Exception($response->getError());
 		$this->productGroups = $response->getProductGroups();
 	}
 
@@ -64,6 +64,7 @@ class Disable_product_groups extends Script
 			];
 			$response = new Response_store_productgroups_edit_post($productGroup->id);
 			$response->editProductGroupInCRM($args);
+			if ($response->hasError()) throw new \Exception($response->getError());
 		}
 	}
 
@@ -77,12 +78,13 @@ class Disable_product_groups extends Script
 			]
 		];
 		$response->getProductsFromCRM($args);
+		if ($response->hasError()) throw new \Exception($response->getError());
 		$this->products = $response->getProducts();
 	}
 
 	private function removeGroupsFromProducts()
 	{
-		if (empty($this->products)) return;
+		if (empty($this->products)) throw new \Exception("no products found");
 		$productsArgs = [];
 		$i = 0;
 		foreach ($this->products as $product) {
@@ -96,5 +98,6 @@ class Disable_product_groups extends Script
 		}
 		$response = new Response_store_products_batch_edit_post();
 		$response->editProductsInCRM(['products' => json_encode($productsArgs)]);
+		if ($response->hasError()) throw new \Exception($response->getError());
 	}
 }

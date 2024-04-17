@@ -23,7 +23,9 @@ abstract class Script
 	{
 		try {
 			if (!$this->db) $this->db = DB::getInstance();
-			$sites = $this->db->sql("SELECT * FROM shops");
+			$stmt = "SELECT * FROM shops";
+			$sites = $this->db->sql($stmt);
+			if ($this->db->hasError()) throw new \Exception("DB request error with statement ($stmt) " . $this->db->getError());
 			if (empty($sites)) throw new \Exception('getSitesFromDB : sites not found in DB');
 			switch ($param) {
 				case 'id':
@@ -57,7 +59,9 @@ abstract class Script
 			if (!$this->db) $this->db = DB::getInstance();
 			$key = array_keys($param)[0];
 			if (!in_array($key, ['id', 'code'])) throw new \Exception("getSiteFromDB : wrong key ($key)");
-			$sites = $this->db->sql("SELECT * FROM shops WHERE shop_crm_{$key} = '{$param[$key]}'");
+			$stmt = "SELECT * FROM shops WHERE shop_crm_{$key} = '{$param[$key]}'";
+			$sites = $this->db->sql($stmt);
+			if ($this->db->hasError()) throw new \Exception("DB request error with statement ($stmt) " . $this->db->getError());
 			if (empty($sites)) throw new \Exception('getSiteFromDB : sites not found in DB');
 			return $sites;
 		} catch (\Exception $e) {

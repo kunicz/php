@@ -15,26 +15,10 @@ class Test extends Script
 
 	public function __construct($scriptData = [])
 	{
-		$this->db = DB::getInstance();
-		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', Logger::shortenPath(__FILE__));
+		$this->logger->addToLog('script', __CLASS__);
 	}
 
 	public function init()
 	{
-		$currentMonthFirstDay = strtotime(date('Y-m-01'));
-		$createdAtFrom = date('Y-m-d', strtotime('-1 month', $currentMonthFirstDay));
-		$createdAtTo = date('Y-m-d', strtotime('-1 day', $currentMonthFirstDay));
-		$args = [
-			'filter' => [
-				'customerId' => 1383,
-				'createdAtFrom' => $createdAtFrom,
-				'createdAtTo' => $createdAtTo
-			]
-		];
-		$response = new Response_orders_get();
-		$response->getOrdersFromCrm($args);
-		$ordersOld = $response->getOrders();
-		echo json_encode($this->logger->getLogData());
 	}
 }

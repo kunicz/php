@@ -204,7 +204,7 @@ class OrderData
 				'uznat_adres_u_poluchatelya'	=> $od['uznat_adres_u_poluchatelya'],
 				'adres_poluchatelya'			=> OrderData_adres::getText($od),
 				'bukety_v_zakaze'				=> OrderData_product::getSummary($od['payment']['products']),
-				'auto_courier'					=> OrderData_dostavka::isVehicleOnly($od['payment']['products']),
+				//'auto_courier'				=> OrderData_dostavka::isVehicleOnly($od['payment']['products']), //будет ставится автоматически в срм
 				'card'							=> OrderData_product::getVyebriKartochku($od['payment']['products']),
 			],
 			'source' => [

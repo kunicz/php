@@ -4,6 +4,7 @@ namespace php2steblya\scripts;
 
 use php2steblya\DB;
 use php2steblya\Logger;
+use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 use php2steblya\retailcrm\Response_store_products_batch_edit_post;
 
@@ -17,23 +18,26 @@ class Products_names_and_articles_in_crm extends Script
 	{
 		$this->db = DB::getInstance();
 		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', Logger::shortenPath(__FILE__));
+		$this->logger->addToLog('script', __CLASS__);
 		$this->site = isset($scriptData['site']) ? $scriptData['site'] : null;
 	}
 
 	public function init()
 	{
-		$sitesFromDB = $this->site ? $this->getSiteFromDB(['code' => $this->site]) : $this->getSitesFromDB();
-		if (empty($sitesFromDB)) return;
-		foreach ($sitesFromDB as $siteFromDB) {
-			$this->site = $siteFromDB;
-			$this->productsToEdit = [];
+		try {
+			$sitesFromDB = $this->site ? $this->getSiteFromDB(['code' => $this->site]) : $this->getSitesFromDB();
+			if (empty($sitesFromDB)) return;
+			foreach ($sitesFromDB as $siteFromDB) {
+				$this->site = $siteFromDB;
+				$this->productsToEdit = [];
 
-			$this->collectProducts(1);
-			$this->editProducts();
+				$this->collectProducts(1);
+				$this->editProducts();
+			}
+			Finish::success();
+		} catch (\Exception $e) {
+			Finish::fail($e);
 		}
-
-		echo json_encode($this->logger->getLogData());
 	}
 
 	private function collectProducts($page)
@@ -48,6 +52,7 @@ class Products_names_and_articles_in_crm extends Script
 			]
 		];
 		$response->getProductsFromCRM($args);
+		if ($response->hasError()) throw new \Exception($response->getError());
 		$this->productsFromCrm = $response->getProducts();
 		$this->logger->addToLog($this->site->shop_crm_code . '_productsFromCrm_page' . $page, $this->productsFromCrm);
 		$this->productsFromYml = $this->getProductsFromYml();
@@ -92,12 +97,14 @@ class Products_names_and_articles_in_crm extends Script
 		foreach ($chunks as $chunk) {
 			$response = new Response_store_products_batch_edit_post();
 			$response->editProductsInCRM(['products' => json_encode($chunk)]);
+			if ($response->hasError()) throw new \Exception($response->getError());
 		}
 	}
 
 	private function getProductsFromYml()
 	{
 		$response = $this->db->sql("SELECT catalog FROM tilda_yml_catalog WHERE shop_crm_id = '{$this->site->shop_crm_id}'");
+		if ($this->db->hasError()) throw new \Exception($this->db->getError());
 		if (!isset($response[0]->catalog)) return [];
 		$catalog = json_decode($response[0]->catalog, true);
 		return $catalog['offers'];
