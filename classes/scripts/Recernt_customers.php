@@ -2,7 +2,6 @@
 
 namespace php2steblya\scripts;
 
-use php2steblya\Logger;
 use php2steblya\Finish;
 use php2steblya\retailcrm\Response_orders_get;
 use php2steblya\retailcrm\Response_customers_edit_post;
@@ -14,7 +13,6 @@ class Recernt_customers extends Script
 
 	public function init()
 	{
-		$this->logger = Logger::getInstance();
 		$this->logger->addToLog('script', __CLASS__);
 
 		try {

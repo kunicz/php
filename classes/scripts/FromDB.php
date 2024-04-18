@@ -2,34 +2,20 @@
 
 namespace php2steblya\scripts;
 
-use php2steblya\DB;
-use php2steblya\Logger;
 use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 
 class FromDB extends Script
 {
-	private $request;
-
-	public function __construct($scriptData = [])
-	{
-		$this->db = DB::getInstance();
-		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', __CLASS__);
-		try {
-			if (empty($scriptData)) throw new \Exception('no parameters passed');
-			$this->request = $scriptData;
-			$this->logger->addToLog('scriptData', $scriptData);
-		} catch (\Exception $e) {
-			Finish::fail($e);
-		}
-	}
-
 	public function init()
 	{
+		$this->logger->addToLog('script', __CLASS__);
+
 		try {
-			if (!isset($this->request['request'])) throw new \Exception("request not set");
-			switch ($this->request['request']) {
+			if (empty($this->scriptData)) throw new \Exception('no parameters passed');
+			if (!isset($this->scriptData['request']) || !$this->scriptData['request']) throw new \Exception("request not set");
+			$request = $this->scriptData['request'];
+			switch ($request) {
 				case 'shops':
 					$stmt = "SELECT * FROM shops";
 					break;
@@ -38,10 +24,8 @@ class FromDB extends Script
 					break;
 				case 'type':
 				case 'purchase_price':
-					if (!isset($this->request['id']) || !$this->request['id']) throw new \Exception("id note set");
-					$crmId = $this->request['id'];
-					$request = $this->request['request'];
-
+					if (!isset($this->scriptData['id']) || !$this->scriptData['id']) throw new \Exception("id note set");
+					$crmId = $this->scriptData['id'];
 					//надо получить id товара в Тильде
 					$args = [
 						'limit' 	=> 100,
@@ -59,11 +43,10 @@ class FromDB extends Script
 					$stmt = "SELECT $request FROM products WHERE id = '$tildaId'";
 					break;
 				default:
-					$request = $this->request['request'];
 					throw new \Exception("rule for parameter ($request) not found");
 			}
 			$response = $this->db->sql($stmt);
-			if ($this->db->hasError()) throw new \Exception("DB request ($this->request) error for statement ($stmt) " . $this->db->getError());
+			if ($this->db->hasError()) throw new \Exception("DB request ($request) error for statement ($stmt) " . $this->db->getError());
 			Finish::success('response', $response);
 		} catch (\Exception $e) {
 			Finish::fail($e);

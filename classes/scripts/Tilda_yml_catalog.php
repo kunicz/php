@@ -2,10 +2,8 @@
 
 namespace php2steblya\scripts;
 
-use php2steblya\DB;
 use php2steblya\YML;
 use php2steblya\File;
-use php2steblya\Logger;
 use php2steblya\Finish;
 
 class Tilda_yml_catalog extends Script
@@ -14,15 +12,10 @@ class Tilda_yml_catalog extends Script
 	private $urlLocal;
 	private $catalog;
 
-	public function __construct($scriptData = [])
-	{
-		$this->db = DB::getInstance();
-		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', __CLASS__);
-	}
-
 	public function init()
 	{
+		$this->logger->addToLog('script', __CLASS__);
+
 		$sitesFromDB = $this->getSitesFromDB();
 		if (empty($sitesFromDB)) return;
 		foreach ($sitesFromDB as $siteFromDB) {

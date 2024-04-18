@@ -2,7 +2,6 @@
 
 namespace php2steblya\scripts;
 
-use php2steblya\Logger;
 use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 use php2steblya\retailcrm\Response_store_productgroups_get;
@@ -14,15 +13,10 @@ class Disable_product_groups extends Script
 	private $products;
 	private $productGroups;
 
-	public function __construct($scriptData = [])
-	{
-		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', __CLASS__);
-		$this->site = isset($scriptData['site']) ? $scriptData['site'] : null;
-	}
-
 	public function init()
 	{
+		$this->logger->addToLog('script', __CLASS__);
+
 		try {
 			if (!$this->site) throw new \Exception('site not set');
 			if (!$this->isSiteExists()) throw new \Exception('site not exists');

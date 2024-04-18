@@ -2,7 +2,6 @@
 
 namespace php2steblya\scripts;
 
-use php2steblya\Logger;
 use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 use php2steblya\retailcrm\Response_reference_stores_get;
@@ -15,17 +14,12 @@ class Unlimited_offers extends Script
 
 	public function init()
 	{
-		$this->logger = Logger::getInstance();
 		$this->logger->addToLog('script', __CLASS__);
 
-		try {
-			$this->collectProducts();
-			$this->collectOffers();
-			$this->fillInventories();
-			Finish::success();
-		} catch (\Exception $e) {
-			Finish::fail($e);
-		}
+		$this->collectProducts();
+		$this->collectOffers();
+		$this->fillInventories();
+		Finish::success();
 	}
 
 	private function collectProducts($page = 1)

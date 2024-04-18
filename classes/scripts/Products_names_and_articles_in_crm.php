@@ -2,8 +2,6 @@
 
 namespace php2steblya\scripts;
 
-use php2steblya\DB;
-use php2steblya\Logger;
 use php2steblya\Finish;
 use php2steblya\retailcrm\Response_store_products_get;
 use php2steblya\retailcrm\Response_store_products_batch_edit_post;
@@ -14,16 +12,10 @@ class Products_names_and_articles_in_crm extends Script
 	private $productsFromYml;
 	private array $productsToEdit = [];
 
-	public function __construct($scriptData = [])
-	{
-		$this->db = DB::getInstance();
-		$this->logger = Logger::getInstance();
-		$this->logger->addToLog('script', __CLASS__);
-		$this->site = isset($scriptData['site']) ? $scriptData['site'] : null;
-	}
-
 	public function init()
 	{
+		$this->logger->addToLog('script', __CLASS__);
+
 		try {
 			$sitesFromDB = $this->site ? $this->getSiteFromDB(['code' => $this->site]) : $this->getSitesFromDB();
 			if (empty($sitesFromDB)) return;
