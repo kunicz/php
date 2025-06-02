@@ -1,8 +1,9 @@
-<?
+<?php
 
 namespace php2steblya;
 
 use php2steblya\Logger;
+
 use LireinCore\YMLParser\YML as YMLparser;
 
 class YML
@@ -11,31 +12,27 @@ class YML
 	{
 		$logger = Logger::getInstance();
 		$catalog = [];
-		try {
-			$ymlParser = new YMLparser();
-			$ymlParser->parse($url);
-			$catalog['date'] = $ymlParser->getDate();
-			$shop = $ymlParser->getShop();
-			if ($shop->isValid()) {
-				$catalog['offersCount'] = $shop->getOffersCount();
-				$catalog['shopData'] = $shop->getData();
-				$catalog['offers'] = [];
-				foreach ($ymlParser->getOffers() as $offer) {
-					if ($offer->isValid()) {
-						$catalog['offers'][] = $offer->getData();
-					} else {
-						$logger->addToLog('error_offer', $offer->getErrors());
-						throw new \Exception('offer not valid');
-					}
+		$ymlParser = new YMLparser();
+		$ymlParser->parse($url);
+		$catalog['date'] = $ymlParser->getDate();
+		$shop = $ymlParser->getShop();
+		$logger->add('shop_data', $shop->getData());
+		if ($shop->isValid()) {
+			$catalog['offersCount'] = $shop->getOffersCount();
+			$catalog['shopData'] = $shop->getData();
+			$catalog['offers'] = [];
+			foreach ($ymlParser->getOffers() as $offer) {
+				if ($offer->isValid()) {
+					$catalog['offers'][] = $offer->getData();
+				} else {
+					throw new \Exception($offer->getErrors());
 				}
-			} else {
-				$logger->addToLog('error_shop', $shop->getErrors());
-				throw new \Exception('shop not valid');
 			}
-		} catch (\Exception $e) {
-			$logger->addToLog('error_message', $e->getMessage());
-			$logger->addToLog('error_file', Logger::shortenPath(__FILE__));
-			$logger->sendToAdmin();
+			$logger->add('shop_data', $catalog['shopData']);
+			$logger->add('offers_count', $catalog['offersCount']);
+			$logger->add('offers', $catalog['offers']);
+		} else {
+			throw new \Exception($shop->getErrors());
 		}
 		return $catalog;
 	}
@@ -63,7 +60,7 @@ class YML
 			$out[] = '<name>' . $offer['name'] . '</name>';
 			$out[] = '<vendorCode>' . $offer['vendorCode'] . '</vendorCode>';
 			//$out[] = '<description></description>';
-			$out[] = '<picture>' . $offer['pictures'][0] . '</picture>';
+			if (!empty($offer['pictures'])) $out[] = '<picture>' . $offer['pictures'][0] . '</picture>';
 			$out[] = '<url>' . $offer['url'] . '</url>';
 			$out[] = '<price>' . $offer['price'] . '</price>';
 			$out[] = '<currencyId>' . $offer['currencyId'] . '</currencyId>';

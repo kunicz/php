@@ -3,62 +3,130 @@
 namespace php2steblya;
 
 use php2steblya\File;
-use php2steblya\telegram\Response_sendMessage_post;
 
 class Logger
 {
-	private static $instance;
-	private $logData = [];
+	private static ?self $instance = null;
+	private array $logData; // Массив для хранения логов
+	private array $groupStack = []; // Стек ключей групп для навигации
 
 	private function __construct()
 	{
-		// Private constructor to prevent instantiation
+		$this->logData = ['errors' => [], 'process' => []];
 	}
 
-	public static function getInstance()
+	// возвращает единственный экземпляр класса Logger.
+	public static function getInstance(): self
 	{
-		if (self::$instance === null) {
-			self::$instance = new self();
-		}
+		if (self::$instance === null) self::$instance = new self();
 		return self::$instance;
 	}
 
-	public function addToLog($key, $value = null)
+	// получает ссылку на группу (можно передать кол-во уровней вверх по стеку)
+	private function &getGroup(int $pop = 0): array
 	{
-		$this->logData[$key] = $value ?: 'none';
+		$target = &$this->logData['process'];
+		for ($i = 0; $i < count($this->groupStack) - $pop; $i++) {
+			$target = &$target[$this->groupStack[$i]];
+		}
+		return $target;
 	}
 
-	public function sendToAdmin()
+	// получает ссылку на текущую группу
+	private function &getCurrentGroup(): array
 	{
-		$time = date('Y-m-d-H-i-s');
+		return $this->getGroup();
+	}
 
-		//отправляем сообщение
-		$message = [
-			date('d.m.Y H:i:s'),
-			'<b>script</b>: ' . $this->logData['script'],
-			'<b>error_file</b>: ' . $this->logData['error_file'],
-			'<b>error_message</b>: ' . $this->logData['error_message'],
-			'<b>logger_data</b> : <a href="https://php.2steblya.ru/error_logs/' . $time . '.json">' . $time . '.json</a>'
+	// получает ссылку на родительскую группу
+	private function &getParentGroup(): array
+	{
+		return $this->getGroup(1);
+	}
+
+	// открывает группу логов.
+	public function setGroup(string $groupTitle, bool $isSub = false): Logger
+	{
+		$title = $groupTitle;
+		if (!$isSub || empty($this->groupStack)) {
+			$this->groupStack = [$title];
+			$this->logData['process'][$title] = [];
+		} else {
+			$this->groupStack[] = $title;
+			$parent = &$this->getParentGroup();
+			$parent[$title] = [];
+		}
+		return $this;
+	}
+
+	// завершает текущую группу логов.
+	public function exitGroup(bool $isSub = false): Logger
+	{
+		if ($isSub && empty($this->groupStack)) return $this;
+
+		if ($isSub) {
+			$this->groupStack = array_slice($this->groupStack, 0, -1);
+		} else {
+			$this->groupStack = [array_pop($this->groupStack)];
+		}
+		return $this;
+	}
+
+	// открывает подгруппу логов.
+	public function setSubGroup(string $groupTitle): Logger
+	{
+		return $this->setGroup($groupTitle, true);
+	}
+
+	// закрывает текущую подгруппу логов.
+	public function exitSubGroup(): Logger
+	{
+		return $this->exitGroup(true);
+	}
+
+	// добавляет лог в текущую группу или подгруппу.
+	public function add(string $key, mixed $value = null): Logger
+	{
+		$target = &$this->getCurrentGroup();
+		$target[$key] = $value;
+		return $this;
+	}
+
+	// добавляет ошибку в лог.
+	public function addError(\Throwable $e): Logger
+	{
+		$data = [
+			'msg' => $e->getMessage(),
+			'file' => File::shortenPath($e->getFile()),
+			'line' => $e->getLine(),
+			'group' => $this->groupStack[0] ?? 'root'
 		];
-		$args = [
-			'chat_id' => $_ENV['telegram_admin_chat_id'],
-			'parse_mode' => 'HTML',
-			'text' => implode("\r\n", $message)
-		];
-		$telegram = new Response_sendMessage_post('admin');
-		$telegram->sendMessage($args);
-
-		//записываем лог в файл
-		$file = new File('/home/k/kuniczw4/php.2steblya.ru/public_html/error_logs/' . $time . '.json');
-		$file->write(json_encode($this->logData, JSON_PRETTY_PRINT));
+		$this->logData['errors'][] = $data;
+		return $this;
 	}
 
-	public static function shortenPath($string)
+	// добавляет информацию о том, какой хэндлер отловил ошибку.
+	public function addErrorHandler(string $e): Logger
 	{
-		return str_replace('/home/k/kuniczw4/php.2steblya.ru/public_html/classes/', '', $string);
+		$this->logData['errors']['handler'] = $e;
+		return $this;
 	}
 
-	public function getLogData()
+	// добавляет лог в корень.
+	public function addRoot(string $key, mixed $value = null): Logger
+	{
+		$this->logData[$key] = $value;
+		return $this;
+	}
+
+	// возвращает ошибки.
+	public function getErrors(): array
+	{
+		return $this->logData['errors'];
+	}
+
+	// возвращает текущие логи.
+	public function getLogData(): array
 	{
 		return $this->logData;
 	}

@@ -1,0 +1,56 @@
+{
+	"name_zakazchika": "Alex Test",
+	"phone_zakazchika": "+7926-113-00-07",
+	"email_zakazchika": "alexz5m@yandex.ru",
+	"messenger_zakazchika": "Alex Test",
+	"dostavka_date": "2025-05-24",
+	"dostavka_interval": "с 16:00 до 20:00",
+	"dostavka_zone": "Москва в перделах МКАД",
+	"adres_poluchatelya_street": "123",
+	"adres_poluchatelya_dom": "123",
+	"adres_poluchatelya_kvartira": "123",
+	"adres_poluchatelya_korpus": "123",
+	"adres_poluchatelya_stroenie": "123",
+	"adres_poluchatelya_podezd": "123",
+	"adres_poluchatelya_etazh": "123",
+	"adres_poluchatelya_domofon": "123",
+	"shop_crm_id": "3",
+	"shop_crm_code": "2steblya",
+	"manager_id": "13",
+	"paymentsystem": "cash",
+	"payment": {
+		"orderid": "1441894650",
+		"products": [
+			{
+				"name": "МА, ЛЮ ТЯ!",
+				"quantity": "1",
+				"amount": "12000",
+				"price": "12000",
+				"sku": "032-10",
+				"options": [
+					{
+						"option": "фор мат",
+						"variant": "букетик"
+					},
+					{
+						"option": "выебри гамму",
+						"variant": "молочный суп"
+					},
+					{
+						"option": "выебри карточку",
+						"variant": "с нашей карточкой"
+					}
+				]
+			}
+		],
+		"amount": "12000",
+		"subtotal": "12000",
+		"delivery": "с 16:00 до 20:00",
+		"delivery_price": "0",
+		"delivery_fio": "",
+		"delivery_address": "",
+		"delivery_comment": ""
+	},
+	"formid": "form461079073",
+	"formname": "Cart"
+}

@@ -1,117 +1,125 @@
-<?
+<?php
 
 namespace php2steblya\order;
 
-use php2steblya\order\OrderData_item;
+use php2steblya\Script;
 
 class OrderData_product
 {
-	public static function prepare($product)
+	// Подготавливает данные продукта
+	public static function prepare(array $product, Script $script)
 	{
+		$product['name'] = self::name($product);
+		$product['sku'] = self::sku($product);
+		$product['artikul'] = self::artikul($product);
+		$product['isVitrina'] = self::isVitrina($product);
+		$product['isDonat'] = (int) $product['sku'] == ARTIKUL_DONAT;
+		$product['isDopnik'] = str_starts_with($product['sku'], ARTIKUL_DOPNIK);
+		$product['isPodpiska'] = str_starts_with($product['sku'], ARTIKUL_PODPISKA);
+		$product['isNormal'] = !$product['isDonat'] && !$product['isDopnik'] && !$product['isPodpiska'];
 		$product['price'] = (int) $product['price'];
-		$product['amount'] = (int) $product['amount'];
+		$product['purchasePrice'] = (int) self::purchasePrice($product, $script);
 		$product['quantity'] = (int) $product['quantity'];
-		$product = self::isVitrina($product);
-		$product['article'] = self::article($product);
-		$product['isDonat'] = $product['sku'] == '1111';
-		$product['isDopnik'] = str_starts_with($product['sku'], '888');
-		$product['isPodpiska'] = str_starts_with($product['sku'], '666');
-		$product = self::optionVyebriKartochku($product);
-		$product = self::optionFormat($product);
+		$product['amount'] = (int) $product['amount'];
+		$product = self::updateOption($product, 'карточка', OPTION_CARD);
+		$product = self::updateOption($product, 'формат', OPTION_FORMAT);
+
 		return $product;
 	}
 
-	private static function article($product)
+	// Название продукта
+	private static function name(array $product): string
+	{
+		$name = html_entity_decode($product['name'], ENT_QUOTES, 'UTF-8');
+		if ($name === 'ЛЮБЛЮЮЮ...') {
+			$loveOption = self::findOption($product['options'] ?? [], 'love is');
+			$name .= $loveOption['variant'] ?? '';
+		}
+		return $name;
+	}
+
+	// Sku продукта (123-10)
+	private static function sku(array $product): string
+	{
+		// не стоит путаться. То, что тильда передает как $product['sku']
+		// в моей терминологии является именно артикулом, а не ску
+		$sku = $product['sku'];
+
+		// обрезаем 'v' для каталожных витринных товароы (123-10v)
+		if (substr($sku, -1) == 'v') $sku = substr($sku, 0, -1);
+
+		return $sku;
+	}
+
+	// Артикул продукта (123)
+	private static function artikul(array $product): string
 	{
 		$articleArray = explode('-', $product['sku']);
 		if (count($articleArray) < 2) return $product['sku'];
-		if (in_array($articleArray[0], explode(',', $_ENV['reserved_articles']))) return $product['sku'];
 		return $articleArray[0];
 	}
 
-	private static function isVitrina($product)
+	// Является ли продукт витриной
+	private static function isVitrina(array $product)
 	{
-		$product['isVitrina'] = false;
-		if (str_starts_with($product['sku'], '777')) {
-			$product['isVitrina'] = true;
-		}
-		if (substr($product['sku'], -1) == 'v') {
-			$product['isVitrina'] = true;
-			$product['sku'] = substr($product['sku'], 0, -1);
-		}
-		return $product;
+		if (str_starts_with($product['sku'], ARTIKUL_VITRINA)) return true;
+		return substr($product['sku'], -1) == 'v';
 	}
 
-	private static function optionVyebriKartochku($product)
+	// закупочная стоимость товара
+	private static function purchasePrice(array $product, Script $script): int
 	{
-		for ($i = 0; $i < count($product['options']); $i++) {
-			if ($product['options'][$i]['option'] != 'карточка') continue;
-			$product['options'][$i]['option'] = 'выебри карточку';
-			break;
-		}
-		return $product;
-	}
+		if (!$product['isDopnik']) return 0;
 
-	private static function optionFormat($product)
-	{
-		for ($i = 0; $i < count($product['options']); $i++) {
-			if ($product['options'][$i]['option'] != 'формат') continue;
-			$product['options'][$i]['option'] = 'фор мат';
-			break;
-		}
-		return $product;
-	}
-
-	public static function getItemsForCrm($product)
-	{
-		return [
-			'offer' => OrderData_item::getOffer($product),
-			'properties' => OrderData_item::getProperties($product),
-			'productName' => $product['name'],
-			'quantity' => $product['quantity'],
-			'initialPrice' => $product['price'],
-			'purchasePrice' => 0
+		$args = [
+			'fields' => ['purchase_price'],
+			'where' => ['shop_crm_id' => $product['shop_crm_id'], 'title' => $product['name']],
+			'limit' => 1
 		];
+		$response = $script->db->products()->get($args);
+
+		return empty($response) ? 0 : $response;
 	}
 
-	public static function getVyebriKartochku($products)
+	// Находит опцию по названию в массиве опций
+	public static function findOption(?array $options, string $optionName): ?array
 	{
-		$cardsItems = [];
-		foreach ($products as $product) {
-			foreach ($product['options'] as $option) {
-				if ($option['option'] != 'выебри карточку') continue;
-				$cardsItems[] = $option['variant'];
-				break;
-			}
+		if (empty($options)) return null;
+
+		foreach ($options as $option) {
+			if (!isset($option['option'])) continue;
+			if ($option['option'] === $optionName) return $option;
 		}
-		return implode(', ', $cardsItems);
+
+		return null;
 	}
 
-	public static function getSummary($products)
+	// Обновляет опцию продукта
+	public static function updateOption(array $product, string $oldOptionName, string $newOptionName): array
 	{
-		$summaryItems = [];
-		foreach ($products as $product) {
-			$summaryItem = '';
-			//название
-			$summaryItem .= $product['name'];
-			//формат
-			foreach ($product['options'] as $option) {
-				if ($option['option'] != 'фор мат') continue;
-				$summaryItem .= ' - ' . $option['variant'];
-				break;
-			}
-			//свойства
-			$dops = [];
-			foreach ($product['options'] as $option) {
-				if (in_array($option['option'], ['выебри карточку', 'фор мат'])) continue;
-				$dops[] = $option['option'] . ': ' . $option['variant'];
-			}
-			if (!empty($dops)) $summaryItem .= ' (' . implode(', ', $dops) . ')';
-			//количество
-			$summaryItem .= ' (' . $product['quantity'] . ' шт)';
+		if (!isset($product['options'])) return $product;
 
-			$summaryItems[] = $summaryItem;
+		$option = self::findOption($product['options'], $oldOptionName);
+		if ($option) {
+			$index = array_search($option, $product['options']);
+			$product['options'][$index]['option'] = $newOptionName;
 		}
-		return implode(', ', $summaryItems);
+
+		return $product;
+	}
+
+	// Фильтрует опции продукта по списку исключений
+	public static function filterOptionsNotInList(?array $options, array $excludeOptions): array
+	{
+		if (empty($options)) return [];
+
+		$filteredOptions = [];
+		foreach ($options as $option) {
+			if (!isset($option['option'])) continue;
+			if (in_array($option['option'], $excludeOptions)) continue;
+			$filteredOptions[] = $option;
+		}
+
+		return $filteredOptions;
 	}
 }

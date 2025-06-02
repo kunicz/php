@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@100..900&display=swap&subset=cyrillic");
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@100..900&display=swap&subset=cyrillic");
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #c9c9c9;
+  font-family: "Source Code Pro", monospace;
+  font-size: 2.2vh;
+  color: #000;
+}
+
+#card {
+  box-sizing: border-box;
+  background: #fff;
+  height: 100vh;
+  width: 70.7106781187vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8vh;
+}
+#card > * {
+  margin: 1vh 0;
+}
+#card #logo {
+  height: 11%;
+  width: 100%;
+}
+#card #logo img {
+  height: 100%;
+  width: auto;
+  margin: 0 1vh;
+}
+#card #title {
+  font-family: "Ubuntu", sans-serif;
+  font-size: 5vh;
+  font-weight: 900;
+  margin-top: 2.5vh;
+}
+#card.gvozdisco #our_text {
+  font-size: 4vh;
+}
+#card #our_text {
+  transform: translateY(0);
+}
+#card #customer_text {
+  font-size: 1.76vh;
+  font-style: italic;
+}
+#card #qr_codes {
+  width: auto;
+}
+#card #qr_codes td {
+  max-width: 14vh;
+}
+#card #qr_codes .caption {
+  font-size: 0.7em;
+}
+#card #qr_codes img {
+  width: 100%;
+  height: auto;
+}

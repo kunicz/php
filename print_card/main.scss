@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@100..900&display=swap&subset=cyrillic');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@100..900&display=swap&subset=cyrillic');
+
+$font_title: 'Ubuntu', sans-serif;
+$font_text: 'Source Code Pro', monospace;
+$font_size: 2.2vh;
+
+// Общие стили
+body {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	height: 100vh;
+	margin: 0;
+	background-color: #c9c9c9;
+	font-family: $font_text;
+	font-size: $font_size;
+	color: #000;
+}
+
+// Карточка (формат A4, без скроллов)
+#card {
+	box-sizing: border-box;
+	background: #fff;
+	height: 100vh;
+	width: calc(100vh / sqrt(2)); // A4 пропорция 1:√2
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8vh;
+
+	&>* {
+		margin: 1vh 0;
+	}
+
+	#logo {
+		height: 11%;
+		width: 100%;
+
+		img {
+			height: 100%;
+			width: auto;
+			margin: 0 1vh
+		}
+	}
+
+	#title {
+		font-family: $font_title;
+		font-size: 5vh;
+		font-weight: 900;
+		margin-top: 2.5vh;
+	}
+
+	&.gvozdisco {
+		#our_text {
+			font-size: 4vh;
+		}
+	}
+
+	#our_text {
+		transform: translateY(0);
+	}
+
+	#customer_text {
+		font-size: calc($font_size * .8);
+		font-style: italic;
+	}
+
+	#qr_codes {
+		width: auto;
+
+		td {
+			max-width: 14vh;
+		}
+
+		.caption {
+			font-size: .7em;
+		}
+
+		img {
+			width: 100%;
+			height: auto
+		}
+	}
+}

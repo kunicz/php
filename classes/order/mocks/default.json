@@ -1,0 +1,44 @@
+{
+	"name_zakazchika": "Test Илья",
+	"phone_zakazchika": "+9110475918",
+	"email_zakazchika": "kunicz@ukr.net",
+	"messenger_zakazchika": "@testTest",
+	"dostavka_date": "2025-05-11",
+	"dostavka_interval": "с 12:00 до 16:00",
+	"dostavka_zone": "Москва в перделах МКАД",
+	"name_poluchatelya": "Test Test Илья",
+	"phone_poluchatelya": "+7963-674-66-56",
+	"adres_poluchatelya_city": "Москва",
+	"adres_poluchatelya_street": "Пресненская набережная",
+	"adres_poluchatelya_dom": "8",
+	"adres_poluchatelya_stroenie": "1",
+	"adres_poluchatelya_etazh": "3",
+	"comment_courier": "Клиника Лапино Сити оставить на ресепшене",
+	"shop_crm_id": "3",
+	"shop_crm_code": "2steblya",
+	"manager_id": "13",
+	"paymentsystem": "yakassa",
+	"payment": {
+		"sys": "yakassa",
+		"systranid": "2fb07379-000f-5000-a000-1865a5cfbc5e",
+		"orderid": "1787225508",
+		"products": [
+			{
+				"name": "ШАПКАКАШКА",
+				"quantity": "1",
+				"amount": "1000",
+				"price": "1000",
+				"sku": "888-shapkaka"
+			}
+		],
+		"amount": "1700",
+		"subtotal": "1000",
+		"delivery": "с 12:00 до 16:00",
+		"delivery_price": "700",
+		"delivery_fio": "",
+		"delivery_address": "",
+		"delivery_comment": ""
+	},
+	"formid": "form461079073",
+	"formname": "Cart"
+}

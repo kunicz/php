@@ -1,1 +1,49 @@
+# Устанавливаем лимит памяти
 php_value memory_limit 512M
+
+# Добавляем заголовки CORS
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    Header always set Access-Control-Max-Age "86400"
+</IfModule>
+
+# Включаем модуль переписывания
+RewriteEngine On
+
+# http->https
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Разрешаем OPTIONS-запросы (preflight)
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule .* - [R=204,L]
+
+# Разрешаем доступ к JSON-файлам в папке error_logs
+RewriteCond %{REQUEST_URI} ^/logs/errors/.*\.json$ [NC]
+RewriteRule .* - [L]
+
+# Разрешаем доступ к .yml-каталогам в папке yml_catalogs
+RewriteCond %{REQUEST_URI} ^/yml_catalogs/[^/]+\.yml$ [NC]
+RewriteRule .* - [L]
+
+# Разрешаем доступ к папке print_card и jscss
+RewriteCond %{REQUEST_URI} ^/(print_card|jscss)(/.*)?$ [NC]
+RewriteRule .* - [L]
+
+# Запрещаем прямой доступ к PHP-файлам, кроме index.php
+RewriteCond %{REQUEST_URI} \.php$ [NC]
+RewriteCond %{REQUEST_URI} !^/index\.php$ [NC]
+RewriteRule .* index.php [QSA,L]
+
+# Перенаправляем доступ к директориям на index.php
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule .* index.php [QSA,L]
+
+# Перенаправляем доступ ко всем остальным файлам на index.php
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule .* index.php [QSA,L]
+
+# Всё остальное перенаправляем на index.php
+RewriteRule .* index.php [QSA,L]
